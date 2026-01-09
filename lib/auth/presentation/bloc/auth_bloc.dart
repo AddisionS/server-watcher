@@ -1,0 +1,49 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:temper/auth/domain/entities/user_entity.dart';
+import 'package:temper/auth/domain/usecases/auth_check_usecase.dart';
+import 'package:temper/auth/domain/usecases/logout_usecase.dart';
+import '../../domain/usecases/login_usecase.dart';
+import 'auth_event.dart';
+import 'auth_state.dart';
+
+class AuthBloc extends Bloc<AuthEvent, AuthState> {
+  final CheckAuthStatusUseCase checkAuthStatusUseCase;
+  final LogoutUseCase logoutUseCase;
+  final LoginUseCase loginUseCase;
+
+  AuthBloc({
+    required this.loginUseCase,
+    required this.checkAuthStatusUseCase,
+    required this.logoutUseCase,
+  }) : super(AuthInitial()) {
+    on<AuthLoginRequested>((event, emit) async {
+      emit(AuthLoading());
+      try {
+        //Call the Domain Layer (The Logic we wrote earlier)
+        final user = await loginUseCase.call(event.username, event.password);
+        emit(AuthSuccess(user));
+      } catch (e) {
+        emit(AuthFailure(e.toString()));
+      }
+    });
+    on<AuthCheckCacheRequested>((event, emit) async {
+      try {
+        final UserEntity? user = await checkAuthStatusUseCase.call();
+        if (user != null) {
+          emit(AuthSuccess(user));
+        }
+      } catch (e) {
+        emit(AuthFailure("Session Check Faild"));
+      }
+    });
+    on<AuthLogoutRequested>((event, emit) {
+      try {
+        emit(AuthLoading());
+        logoutUseCase.call();
+        emit(AuthInitial());
+      } catch (e) {
+        emit(AuthFailure(e.toString()));
+      }
+    });
+  }
+}
