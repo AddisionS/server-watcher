@@ -13,17 +13,12 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // 1. Controllers to get text
+  // ... (Keep your controllers and variables exactly the same) ...
   final TextEditingController userController = TextEditingController();
   final TextEditingController passController = TextEditingController();
-
-  // 2. Form Key for validation
   final _formKey = GlobalKey<FormState>();
-
-  // 3. UI State for Password Visibility
   bool isPasswordVisible = false;
 
-  // Best Practice: Always dispose controllers!
   @override
   void dispose() {
     userController.dispose();
@@ -34,154 +29,181 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Modern styling: simpler AppBars or no AppBar
+      // NEW: Add a light background color (looks good on Web)
+      backgroundColor: Colors.grey[200],
+
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          child: BlocConsumer<AuthBloc, AuthState>(
-            listener: (context, state) {
-              if (state is AuthFailure) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.message),
-                    backgroundColor: Colors.red,
-                    behavior: SnackBarBehavior.floating, // Floats above bottom
-                  ),
-                );
-              } else if (state is AuthSuccess) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Success! Role: ${state.user.role}"),
-                    backgroundColor: Colors.green,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => HomePage(user: state.user)),
-                );
-                ScaffoldMessenger.of(context).clearSnackBars();
-              }
-            },
-            builder: (context, state) {
-              if (state is AuthLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              return Form(
-                key: _formKey, // Bind the key to this form
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // --- Title Section ---
-                    const Text(
-                      "Welcome Back",
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Please sign in to continue",
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 40),
-
-                    // --- Username Field ---
-                    TextFormField(
-                      controller: userController,
-                      decoration: InputDecoration(
-                        labelText: "Username",
-                        prefixIcon: const Icon(Icons.person_outline),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a username';
-                        }
-                        return null; // Null means valid
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // --- Password Field ---
-                    TextFormField(
-                      controller: passController,
-                      obscureText: !isPasswordVisible, // Toggles hide/show
-                      decoration: InputDecoration(
-                        labelText: "Password",
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            isPasswordVisible
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            // UI Logic: Local setState is fine here!
-                            setState(() {
-                              isPasswordVisible = !isPasswordVisible;
-                            });
-                          },
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a password';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-
-                    // --- Login Button ---
-                    ElevatedButton(
-                      onPressed: () {
-                        // 1. Check Validation first
-                        if (_formKey.currentState!.validate()) {
-                          // 2. Only if valid, talk to BLoC
-                          context.read<AuthBloc>().add(
-                            AuthLoginRequested(
-                              username: userController.text.trim(),
-                              password: passController.text.trim(),
-                            ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        backgroundColor: Colors.blueAccent, // Customize color
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text(
-                        "Login",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+          child: Center(
+            // --- NEW: THE CONSTRAINT ---
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: 450,
+              ), // Max width for Web
+              // --- NEW: THE CARD ---
+              // Adds a nice shadow and white background behind the form
+              child: Card(
+                elevation: 8, // float effect
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              );
-            },
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 32.0,
+                    horizontal: 24.0,
+                  ),
+
+                  // EXISTING BLOC LOGIC STARTS HERE
+                  child: BlocConsumer<AuthBloc, AuthState>(
+                    listener: (context, state) {
+                      // ... (Keep your existing Listener logic) ...
+                      if (state is AuthFailure) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.message),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      } else if (state is AuthSuccess) {
+                        ScaffoldMessenger.of(context).clearSnackBars();
+                        // Navigate based on role... (Keep your existing navigation logic)
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => HomePage(user: state.user),
+                          ),
+                        );
+                      }
+                    },
+                    builder: (context, state) {
+                      if (state is AuthLoading) {
+                        return const SizedBox(
+                          height: 200,
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+
+                      return Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize:
+                              MainAxisSize.min, // Shrink to fit content
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Text(
+                              "Welcome Back",
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Please sign in to continue",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 40),
+
+                            // --- Username Field ---
+                            TextFormField(
+                              controller: userController,
+                              decoration: InputDecoration(
+                                labelText: "Username",
+                                prefixIcon: const Icon(Icons.person_outline),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: Colors
+                                    .grey[50], // Slightly lighter inside white card
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty)
+                                  return 'Please enter a username';
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // --- Password Field ---
+                            TextFormField(
+                              controller: passController,
+                              obscureText: !isPasswordVisible,
+                              decoration: InputDecoration(
+                                labelText: "Password",
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    isPasswordVisible
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      isPasswordVisible = !isPasswordVisible;
+                                    });
+                                  },
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[50],
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty)
+                                  return 'Please enter a password';
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 24),
+
+                            // --- Login Button ---
+                            ElevatedButton(
+                              onPressed: () {
+                                if (_formKey.currentState!.validate()) {
+                                  context.read<AuthBloc>().add(
+                                    AuthLoginRequested(
+                                      username: userController.text.trim(),
+                                      password: passController.text.trim(),
+                                    ),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 20,
+                                ), // Taller button
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                backgroundColor: Colors.blueAccent,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text(
+                                "Login",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
