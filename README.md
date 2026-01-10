@@ -1,3 +1,3 @@
-# temper
+# SDC
 
-## IOT based flutter project
+Web app using Flutter
