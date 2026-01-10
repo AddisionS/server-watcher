@@ -3,8 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
-import 'admin_page.dart';
-import 'user_page.dart';
+import '../../../home/presentation/pages/home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -58,22 +57,13 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 );
 
-                final role = state.user.role;
-                if (role == 'admin') {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AdminHomePage()),
-                  );
-                } else if (role == 'user') {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const UserHomePage()),
-                  );
-                }
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => HomePage(user: state.user)),
+                );
                 ScaffoldMessenger.of(context).clearSnackBars();
               }
             },
-
             builder: (context, state) {
               if (state is AuthLoading) {
                 return const Center(child: CircularProgressIndicator());
