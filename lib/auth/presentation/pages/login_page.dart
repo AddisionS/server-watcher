@@ -126,8 +126,9 @@ class _LoginPageState extends State<LoginPage> {
                                     .grey[50], // Slightly lighter inside white card
                               ),
                               validator: (value) {
-                                if (value == null || value.isEmpty)
+                                if (value == null || value.isEmpty) {
                                   return 'Please enter a username';
+                                }
                                 return null;
                               },
                             ),
@@ -159,8 +160,9 @@ class _LoginPageState extends State<LoginPage> {
                                 fillColor: Colors.grey[50],
                               ),
                               validator: (value) {
-                                if (value == null || value.isEmpty)
+                                if (value == null || value.isEmpty) {
                                   return 'Please enter a password';
+                                }
                                 return null;
                               },
                             ),

@@ -46,12 +46,11 @@ class HomePage extends StatelessWidget {
 
         body: ResponsiveLayout(
           // 1. MOBILE VIEW (Existing Vertical Column)
-          mobileBody: _HomeContent(user: user, isDesktop: false),
+          mobileBody: HomeContent(user: user, isDesktop: false),
 
           // 2. DESKTOP VIEW (Sidebar + Content)
           desktopBody: Row(
             children: [
-              // Permanent Sidebar
               SizedBox(
                 width: 250,
                 child: HomeDrawer(
@@ -68,7 +67,7 @@ class HomePage extends StatelessWidget {
                         : Colors.blueAccent,
                     automaticallyImplyLeading: false, // Hide hamburger
                   ),
-                  body: _HomeContent(user: user, isDesktop: true),
+                  body: HomeContent(user: user, isDesktop: true),
                 ),
               ),
             ],
@@ -80,11 +79,11 @@ class HomePage extends StatelessWidget {
 }
 
 // Extract the content into a separate widget to avoid code duplication
-class _HomeContent extends StatelessWidget {
+class HomeContent extends StatelessWidget {
   final bool isDesktop;
   final UserEntity user;
 
-  const _HomeContent({required this.isDesktop, required this.user});
+  const HomeContent({super.key, required this.isDesktop, required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -96,41 +95,83 @@ class _HomeContent extends StatelessWidget {
         if (state is HomeError) return Center(child: Text(state.message));
 
         if (state is HomeLoaded) {
+          // Safety Check: Get latest data or defaults if empty
+          final double latestTemp = state.sensorData.isNotEmpty
+              ? state.sensorData.last.temperature
+              : 0.0;
+          final double latestHum = state.sensorData.isNotEmpty
+              ? state.sensorData.last.humidity
+              : 0.0;
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // Dropdown
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    width: isDesktop
-                        ? 300
-                        : double.infinity, // Smaller dropdown on desktop
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: state.selectedRoom,
-                        isExpanded: true,
-                        items: state.rooms
-                            .map(
-                              (r) => DropdownMenuItem(value: r, child: Text(r)),
-                            )
-                            .toList(),
-                        onChanged: (v) =>
-                            context.read<HomeBloc>().add(HomeRoomChanged(v!)),
+                // --- TOP BAR: DROPDOWN + STATS ---
+                Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  child: Row(
+                    // This pushes the Dropdown to left and Stats to right
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // 1. THE DROPDOWN
+                      // We wrap in specific width for Desktop, or Flexible for mobile
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: isDesktop ? 300 : 200,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.white,
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: state.selectedRoom,
+                              isExpanded: true,
+                              items: state.rooms
+                                  .map(
+                                    (r) => DropdownMenuItem(
+                                      value: r,
+                                      child: Text(r),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (v) => context.read<HomeBloc>().add(
+                                HomeRoomChanged(v!),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+
+                      // 2. THE STATS (Right Side)
+                      // Only show if we have data
+                      if (state.sensorData.isNotEmpty)
+                        Row(
+                          children: [
+                            // Temperature Box
+                            _buildStatBadge(
+                              icon: Icons.thermostat,
+                              color: Colors.red,
+                              label: "${latestTemp.toStringAsFixed(1)}°C",
+                            ),
+                            const SizedBox(width: 16),
+                            // Humidity Box
+                            _buildStatBadge(
+                              icon: Icons.water_drop,
+                              color: Colors.blue,
+                              label: "${latestHum.toStringAsFixed(1)}%",
+                            ),
+                          ],
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 20),
 
-                // Graphs Layout
-                // On Desktop: Show graphs side-by-side. On Mobile: Top-to-bottom.
+                // --- GRAPHS LAYOUT ---
                 if (isDesktop)
                   Row(
                     children: [
@@ -175,6 +216,36 @@ class _HomeContent extends StatelessWidget {
         }
         return const SizedBox();
       },
+    );
+  }
+
+  // Helper widget to make the stats look nice
+  Widget _buildStatBadge({
+    required IconData icon,
+    required Color color,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
