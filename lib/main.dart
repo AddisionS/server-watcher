@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // Imports from your layers
 import 'auth/data/datasources/auth_datasource.dart';
-import 'auth/data/repos/repo_impl.dart';
+import 'auth/data/repositories/repo_impl.dart';
 import 'auth/presentation/bloc/auth_bloc.dart';
 import 'auth/presentation/bloc/auth_event.dart';
 import 'auth/presentation/pages/login_page.dart';

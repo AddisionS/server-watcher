@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../auth/domain/entities/user_entity.dart';
 import '../../../home/data/datasource/home_datasource.dart';
-import '../../../home/data/repos/home_repository_impl.dart';
+import '../../../home/data/repositories/home_repository_impl.dart';
 import '../../../home/domain/usecases/room_fetch_usecase.dart';
 import '../../../../home/presentation/widgets/home_drawer.dart';
 import '../../../../home/presentation/widgets/responsive_layout.dart';

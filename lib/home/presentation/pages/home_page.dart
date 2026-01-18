@@ -4,7 +4,7 @@ import '../../../../auth/domain/entities/user_entity.dart';
 import '../../domain/usecases/room_fetch_usecase.dart';
 import '../../domain/usecases/data_fetch_usecase.dart';
 import '../../data/datasource/home_datasource.dart';
-import '../../data/repos/home_repository_impl.dart';
+import '../../data/repositories/home_repository_impl.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
