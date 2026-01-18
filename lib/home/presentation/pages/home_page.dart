@@ -173,34 +173,40 @@ class HomeContent extends StatelessWidget {
 
                 // --- GRAPHS LAYOUT ---
                 if (isDesktop)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SensorChart(
-                          title: "Temperature (°C)",
-                          data: state.sensorData,
-                          isTemperature: true,
-                          lineColor: Colors.red,
+                  AspectRatio(
+                    aspectRatio: 3.0,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: SensorChart(
+                            title: "Temperature (°C)",
+                            data: state.sensorData,
+                            isTemperature: true,
+                            lineColor: Colors.red,
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: SensorChart(
-                          title: "Humidity (%)",
-                          data: state.sensorData,
-                          isTemperature: false,
-                          lineColor: Colors.blue,
+                        Expanded(
+                          child: SensorChart(
+                            title: "Humidity (%)",
+                            data: state.sensorData,
+                            isTemperature: false,
+                            lineColor: Colors.blue,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   )
                 else
                   Column(
                     children: [
-                      SensorChart(
-                        title: "Temperature",
-                        data: state.sensorData,
-                        isTemperature: true,
-                        lineColor: Colors.red,
+                      AspectRatio(
+                        aspectRatio: 1.4,
+                        child: SensorChart(
+                          title: "Temperature",
+                          data: state.sensorData,
+                          isTemperature: true,
+                          lineColor: Colors.red,
+                        ),
                       ),
                       SensorChart(
                         title: "Humidity",

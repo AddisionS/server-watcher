@@ -32,15 +32,14 @@ class SensorChart extends StatelessWidget {
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            AspectRatio(
-              aspectRatio: 1.70,
+            Expanded(
               child: data.isEmpty
                   ? const Center(child: Text("Waiting for data..."))
                   : LineChart(
                       LineChartData(
-                        // --- NEW CODE START ---
                         lineTouchData: LineTouchData(
                           touchTooltipData: LineTouchTooltipData(
+                            tooltipBgColor: Colors.blueGrey,
                             getTooltipItems:
                                 (List<LineBarSpot> touchedBarSpots) {
                                   return touchedBarSpots.map((barSpot) {
@@ -58,7 +57,6 @@ class SensorChart extends StatelessWidget {
                           ),
                         ),
 
-                        // --- NEW CODE END ---
                         gridData: const FlGridData(show: true),
                         titlesData: const FlTitlesData(
                           bottomTitles: AxisTitles(

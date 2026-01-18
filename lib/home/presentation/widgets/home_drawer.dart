@@ -4,6 +4,7 @@ import '../../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../auth/presentation/bloc/auth_event.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../auth/presentation/pages/login_page.dart';
+import '../../../history/presentation/pages/history_page.dart'; // Import History Page
 
 class HomeDrawer extends StatelessWidget {
   final UserEntity user;
@@ -54,6 +55,18 @@ class HomeDrawer extends StatelessWidget {
                 );
               },
             ),
+
+          ListTile(
+            leading: const Icon(Icons.history),
+            title: const Text("24h Log"),
+            onTap: () {
+              if (!isDesktop) Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => HistoryPage(user: user)),
+              );
+            },
+          ),
 
           const Spacer(), // Pushes logout to bottom
           const Divider(),

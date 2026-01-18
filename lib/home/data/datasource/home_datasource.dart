@@ -12,7 +12,7 @@ class HomeMockDataSourceImpl implements HomeRemoteDataSource {
   Future<List<String>> fetchRooms() async {
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
-    return ['Server Room', 'Lobby', 'Office', 'Cafeteria'];
+    return ['AB1 room 001', 'A', 'Office', ''];
   }
 
   @override

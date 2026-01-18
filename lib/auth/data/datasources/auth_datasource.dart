@@ -15,6 +15,7 @@ class AuthDataSourceImpl implements AuthDataSource {
 
   @override
   Future<UserModel> loginUser(String username, String password) async {
+    //work required auth token
     if (username == 'admin' && password == 'SDC@admin') {
       return UserModel(username: 'admin', role: 'admin');
     } else if (username == 'user' && password == 'SDC@user') {
