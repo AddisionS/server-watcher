@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:math'; // For random numbers
+import 'dart:math';
 import '../models/sensor_model.dart';
 
 abstract class HomeRemoteDataSource {
@@ -12,7 +12,12 @@ class HomeMockDataSourceImpl implements HomeRemoteDataSource {
   Future<List<String>> fetchRooms() async {
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
-    return ['AB1 room 001', 'A', 'Office', ''];
+    return [
+      'AB1 room 001',
+      'Administrative Block',
+      'AB2 room 002',
+      'AB3 room 003',
+    ];
   }
 
   @override

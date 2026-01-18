@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import '/home/presentation/pages/home_page.dart';
 import '../../../../auth/domain/entities/user_entity.dart';
 import '../../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../auth/presentation/bloc/auth_event.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../../history/presentation/pages/history_page.dart'; // Import History Page
+import '../../../config/presentation/pages/config_page.dart'; // Import config page
 
 class HomeDrawer extends StatelessWidget {
   final UserEntity user;
@@ -40,7 +42,14 @@ class HomeDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.dashboard),
             title: const Text("Dashboard"),
-            onTap: () => Navigator.pop(context), // Close drawer
+            onTap: () {
+              if (!isDesktop) Navigator.pop(context);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => HomePage(user: user)),
+                (route) => false,
+              );
+            },
           ),
 
           // LOGIC: Only show for Admin
@@ -49,9 +58,11 @@ class HomeDrawer extends StatelessWidget {
               leading: const Icon(Icons.settings),
               title: const Text("Configuration"),
               onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Config Page Coming Soon!")),
+                if (!isDesktop) Navigator.pop(context);
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => ConfigPage(user: user)),
+                  (route) => false,
                 );
               },
             ),
@@ -61,9 +72,10 @@ class HomeDrawer extends StatelessWidget {
             title: const Text("24h Log"),
             onTap: () {
               if (!isDesktop) Navigator.pop(context);
-              Navigator.pushReplacement(
+              Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => HistoryPage(user: user)),
+                (route) => false,
               );
             },
           ),

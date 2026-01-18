@@ -1,14 +1,14 @@
 class ThresholdsEntity {
-  final double minTemp;
-  final double maxTemp;
-  final double minHum;
-  final double maxHum;
+  final double subTemp;
+  final double thresTemp;
+  final double subHum;
+  final double thresHum;
 
   ThresholdsEntity({
-    required this.minTemp,
-    required this.maxTemp,
-    required this.minHum,
-    required this.maxHum,
+    required this.subTemp,
+    required this.thresTemp,
+    required this.subHum,
+    required this.thresHum,
   });
 }
 

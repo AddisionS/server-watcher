@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:temper/auth/domain/entities/user_entity.dart';
-import 'package:temper/auth/domain/usecases/auth_check_usecase.dart';
-import 'package:temper/auth/domain/usecases/logout_usecase.dart';
+import '/auth/domain/entities/user_entity.dart';
+import '/auth/domain/usecases/auth_check_usecase.dart';
+import '/auth/domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
