@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+// Domain & Data Imports
 import '../../../../auth/domain/entities/user_entity.dart';
 import '../../domain/usecases/room_fetch_usecase.dart';
 import '../../domain/usecases/data_fetch_usecase.dart';
 import '../../data/datasource/home_datasource.dart';
 import '../../data/repositories/home_repository_impl.dart';
-import '../../domain/usecases/thresholds_fetch_usecase.dart'; // Import this
-import '../widgets/sensor_gauge.dart'; // Import the gauge
+import '../../domain/usecases/thresholds_fetch_usecase.dart';
+
+// Export Feature Imports
 import '../../../export/data/datasources/export_mock_data_source.dart';
 import '../../../export/data/repositories/export_repository_impl.dart';
 import '../../../export/domain/usecases/download_report_usecase.dart';
 import '../../../export/presentation/bloc/export_bloc.dart';
-import '../../../export/presentation/widgets/export_section.dart'; // Import Widget
+import '../../../export/presentation/widgets/export_section.dart';
+
+// Home Widgets & Bloc
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
-import '../widgets/home_drawer.dart';
+import '../widgets/sensor_gauge.dart';
 import '../widgets/sensor_chart.dart';
-import '../widgets/responsive_layout.dart';
+import '../widgets/main_layout.dart'; // <--- IMPORT THE NEW LAYOUT
 
 class HomePage extends StatelessWidget {
   final UserEntity user;
@@ -26,8 +31,10 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Dependency Injection
     final dataSource = HomeMockDataSourceImpl();
     final repo = HomeRepositoryImpl(remoteDataSource: dataSource);
+
     final exportRepo = ExportRepositoryImpl(ExportMockDataSourceImpl());
     final downloadUseCase = DownloadReportUseCase(exportRepo);
 
@@ -42,64 +49,26 @@ class HomePage extends StatelessWidget {
         ),
         BlocProvider<ExportBloc>(create: (_) => ExportBloc(downloadUseCase)),
       ],
-      child: Scaffold(
-        appBar: MediaQuery.of(context).size.width < 800
-            ? AppBar(
-                title: Text("Dashboard (${user.role})"),
-                backgroundColor: user.role == 'admin'
-                    ? Colors.redAccent
-                    : Colors.blueAccent,
-              )
-            : null,
 
-        // On Mobile: Show Drawer. On Desktop: Null
-        drawer: MediaQuery.of(context).size.width < 800
-            ? HomeDrawer(user: user)
-            : null,
-
-        body: ResponsiveLayout(
-          // 1. MOBILE VIEW (Existing Vertical Column)
-          mobileBody: HomeContent(user: user, isDesktop: false),
-
-          // 2. DESKTOP VIEW (Sidebar + Content)
-          desktopBody: Row(
-            children: [
-              SizedBox(
-                width: 250,
-                child: HomeDrawer(
-                  user: user,
-                ), // We reuse the drawer as a sidebar!
-              ),
-              // Content Area
-              Expanded(
-                child: Scaffold(
-                  appBar: AppBar(
-                    title: Text("Dashboard (${user.role})"),
-                    backgroundColor: user.role == 'admin'
-                        ? Colors.redAccent
-                        : Colors.blueAccent,
-                    automaticallyImplyLeading: false,
-                  ),
-                  body: HomeContent(user: user, isDesktop: true),
-                ),
-              ),
-            ],
-          ),
-        ),
+      // 2. USE MAIN LAYOUT (Replaces Scaffold, AppBar, Drawer, ResponsiveLayout)
+      child: MainLayout(
+        user: user,
+        title: "Dashboard",
+        body: const HomeContent(), // Content is now cleaner
       ),
     );
   }
 }
 
-// Extract the content into a separate widget to avoid code duplication
 class HomeContent extends StatelessWidget {
-  final bool isDesktop;
-  final UserEntity user;
-
-  const HomeContent({super.key, required this.isDesktop, required this.user});
+  const HomeContent({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // We check width locally just to decide if graphs should be Row or Column
+    // This allows the inner content to be responsive even if the Sidebar is fixed.
+    final bool isWideScreen = MediaQuery.of(context).size.width >= 1000;
+
     return BlocBuilder<HomeBloc, HomeState>(
       builder: (context, state) {
         if (state is HomeLoading) {
@@ -108,7 +77,7 @@ class HomeContent extends StatelessWidget {
         if (state is HomeError) return Center(child: Text(state.message));
 
         if (state is HomeLoaded) {
-          // Safety Check: Get latest data or defaults if empty
+          // Safety Check
           final double latestTemp = state.sensorData.isNotEmpty
               ? state.sensorData.last.temperature
               : 0.0;
@@ -118,18 +87,19 @@ class HomeContent extends StatelessWidget {
           final thresholds = state.thresholds;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                // --- TOP BAR ---
+                // --- 1. TOP BAR (Dropdown) ---
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Container(
-                    width: isDesktop ? 300 : double.infinity,
+                    width: 300, // Fixed width for web look
                     margin: const EdgeInsets.only(bottom: 20),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
+                      // Use Theme colors (border transparent white in dark mode)
+                      border: Border.all(color: Theme.of(context).dividerColor),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: DropdownButtonHideUnderline(
@@ -147,12 +117,15 @@ class HomeContent extends StatelessWidget {
                     ),
                   ),
                 ),
+
                 // --- 2. GAUGES SECTION ---
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                    borderRadius: BorderRadius.circular(16),
+                    // Subtle background for dark mode
+                    color: Colors.white.withOpacity(0.05),
+                    border: Border.all(color: Colors.white10),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -163,8 +136,8 @@ class HomeContent extends StatelessWidget {
                         value: double.parse(latestTemp.toStringAsFixed(1)),
                         unit: "°C",
                         axisMax: 50,
-                        minThreshold: thresholds.subTemp, // Start of Orange
-                        maxThreshold: thresholds.thresTemp, // Start of Red
+                        minThreshold: thresholds.subTemp,
+                        maxThreshold: thresholds.thresTemp,
                       ),
                       // Humidity Gauge
                       SensorGauge(
@@ -179,25 +152,27 @@ class HomeContent extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
 
-                // --- GRAPHS LAYOUT ---
-                if (isDesktop)
+                // --- 3. GRAPHS LAYOUT ---
+                if (isWideScreen)
+                  // Side-by-Side for Wide Screens
                   AspectRatio(
-                    aspectRatio: 4.5,
+                    aspectRatio: 3.5,
                     child: Row(
                       children: [
                         Expanded(
                           child: SensorChart(
-                            title: "Temperature (°C)",
+                            title: "Temperature History",
                             data: state.sensorData,
                             isTemperature: true,
                             lineColor: Colors.red,
                           ),
                         ),
+                        const SizedBox(width: 24),
                         Expanded(
                           child: SensorChart(
-                            title: "Humidity (%)",
+                            title: "Humidity History",
                             data: state.sensorData,
                             isTemperature: false,
                             lineColor: Colors.blue,
@@ -207,10 +182,11 @@ class HomeContent extends StatelessWidget {
                     ),
                   )
                 else
+                  // Stacked for Narrow Screens (Tablets/Small Laptops)
                   Column(
                     children: [
                       AspectRatio(
-                        aspectRatio: 2,
+                        aspectRatio: 1.8,
                         child: SensorChart(
                           title: "Temperature",
                           data: state.sensorData,
@@ -218,17 +194,22 @@ class HomeContent extends StatelessWidget {
                           lineColor: Colors.red,
                         ),
                       ),
-                      SensorChart(
-                        title: "Humidity",
-                        data: state.sensorData,
-                        isTemperature: false,
-                        lineColor: Colors.blue,
+                      const SizedBox(height: 20),
+                      AspectRatio(
+                        aspectRatio: 1.8,
+                        child: SensorChart(
+                          title: "Humidity",
+                          data: state.sensorData,
+                          isTemperature: false,
+                          lineColor: Colors.blue,
+                        ),
                       ),
                     ],
                   ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
 
+                // --- 4. EXPORT SECTION ---
                 ExportSection(currentRoom: state.selectedRoom),
 
                 const SizedBox(height: 40),

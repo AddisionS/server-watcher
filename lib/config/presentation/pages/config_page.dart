@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+// Domain & Data Imports
 import '../../../auth/domain/entities/user_entity.dart';
-import '../../../home/presentation/widgets/home_drawer.dart';
 import '../../data/datasources/config_mock_data_source.dart';
 import '../../data/repositories/config_repository_impl.dart';
 import '../../domain/usecases/update_config_usecase.dart';
+
+// Bloc Imports
 import '../bloc/config_bloc.dart';
 import '../bloc/config_event.dart';
 import '../bloc/config_state.dart';
+
+// Layout Import
+import '../../../home/presentation/widgets/main_layout.dart'; // <--- IMPORT THIS
 
 class ConfigPage extends StatelessWidget {
   final UserEntity user;
@@ -16,7 +22,7 @@ class ConfigPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Dependency Injection
+    // 1. Dependency Injection
     final dataSource = ConfigMockDataSourceImpl();
     final repo = ConfigRepositoryImpl(remoteDataSource: dataSource);
 
@@ -25,47 +31,33 @@ class ConfigPage extends StatelessWidget {
         updateThresholdsUseCase: UpdateThresholdsUseCase(repo),
         updateContactsUseCase: UpdateContactsUseCase(repo),
       ),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("System Configuration"),
-          backgroundColor: Colors.redAccent, // Admin color
-        ),
-        drawer: MediaQuery.of(context).size.width < 800
-            ? HomeDrawer(user: user)
-            : null,
-        body: Row(
-          children: [
-            // Sidebar for Desktop
-            if (MediaQuery.of(context).size.width >= 800)
-              SizedBox(width: 250, child: HomeDrawer(user: user)),
 
-            // Main Content
-            Expanded(
-              child: BlocListener<ConfigBloc, ConfigState>(
-                listener: (context, state) {
-                  if (state is ConfigSuccess) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(state.message),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  } else if (state is ConfigFailure) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(state.error),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                },
-                child: const SingleChildScrollView(
-                  padding: EdgeInsets.all(24.0),
-                  child: _ConfigForm(),
+      // 2. USE MAIN LAYOUT (Cleaner Structure)
+      child: MainLayout(
+        user: user,
+        title: "System Configuration",
+        body: BlocListener<ConfigBloc, ConfigState>(
+          listener: (context, state) {
+            if (state is ConfigSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.green,
                 ),
-              ),
-            ),
-          ],
+              );
+            } else if (state is ConfigFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+          child: const SingleChildScrollView(
+            padding: EdgeInsets.all(24.0),
+            child: _ConfigForm(),
+          ),
         ),
       ),
     );
@@ -105,6 +97,7 @@ class _ConfigFormState extends State<_ConfigForm> {
 
   @override
   Widget build(BuildContext context) {
+    // We check width locally just to size buttons
     final isDesktop = MediaQuery.of(context).size.width >= 800;
 
     return Column(
@@ -118,11 +111,11 @@ class _ConfigFormState extends State<_ConfigForm> {
         const SizedBox(height: 8),
         const Text(
           "Set the Sub-threshold and threshold values for the server room.",
+          style: TextStyle(color: Colors.white70),
         ),
         const SizedBox(height: 20),
 
         Card(
-          elevation: 2,
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Form(
@@ -209,11 +202,13 @@ class _ConfigFormState extends State<_ConfigForm> {
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        const Text("Configure who receives SMS and Email alerts."),
+        const Text(
+          "Configure who receives SMS and Email alerts.",
+          style: TextStyle(color: Colors.white70),
+        ),
         const SizedBox(height: 20),
 
         Card(
-          elevation: 2,
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Form(
@@ -292,6 +287,7 @@ class _ConfigFormState extends State<_ConfigForm> {
         labelText: label,
         border: const OutlineInputBorder(),
         filled: true,
+        // fillColor is handled by the main Theme now
       ),
       validator: (value) {
         if (value == null || value.isEmpty) return 'Required';

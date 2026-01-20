@@ -91,10 +91,21 @@ class _LoginPageState extends State<LoginPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            Center(
+                              child: SizedBox(
+                                height: 100, // Adjust height as needed
+                                width: 200, // Adjust width as needed
+                                child: Image.asset(
+                                  'assets/images/logoSdc.png',
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
                             const Text(
                               "Welcome Back",
                               style: TextStyle(
-                                fontSize: 28,
+                                fontSize: 36,
                                 fontWeight: FontWeight.bold,
                               ),
                               textAlign: TextAlign.center,

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../auth/domain/entities/user_entity.dart';
-import '../../../../home/presentation/widgets/home_drawer.dart';
-import '../../../../home/presentation/widgets/responsive_layout.dart';
 // Data Injection Imports
 import '../../../home/data/datasource/home_datasource.dart';
 import '../../../../home/data/repositories/home_repository_impl.dart';
@@ -14,6 +12,8 @@ import '../../domain/usecases/get_alerts_usecase.dart';
 import '../bloc/alerts_bloc.dart';
 import '../bloc/alerts_event.dart';
 import '../bloc/alerts_state.dart';
+// Layout Import
+import '../../../../home/presentation/widgets/main_layout.dart'; // <--- IMPORT THIS
 
 class AlertsPage extends StatelessWidget {
   final UserEntity user;
@@ -35,47 +35,25 @@ class AlertsPage extends StatelessWidget {
         getRoomsUseCase: GetRoomsUseCase(homeRepo),
         getAlertsUseCase: GetAlertsUseCase(alertsRepo),
       )..add(AlertsInitialLoad()),
-      child: Scaffold(
-        appBar: MediaQuery.of(context).size.width < 800
-            ? AppBar(
-                title: const Text("System Alerts"),
-                backgroundColor: Colors.red[900], // Dark Red for Alerts
-              )
-            : null,
-        drawer: MediaQuery.of(context).size.width < 800
-            ? HomeDrawer(user: user)
-            : null,
-        body: ResponsiveLayout(
-          mobileBody: _AlertsContent(isDesktop: false, user: user),
-          desktopBody: Row(
-            children: [
-              SizedBox(width: 250, child: HomeDrawer(user: user)),
-              Expanded(
-                child: Scaffold(
-                  appBar: AppBar(
-                    title: const Text("System Alerts"),
-                    backgroundColor: Colors.red[900],
-                    automaticallyImplyLeading: false,
-                  ),
-                  body: _AlertsContent(isDesktop: true, user: user),
-                ),
-              ),
-            ],
-          ),
-        ),
+
+      // 2. USE MAIN LAYOUT
+      child: MainLayout(
+        user: user,
+        title: "System Alerts",
+        body: const _AlertsContent(), // Cleaner: No params needed
       ),
     );
   }
 }
 
 class _AlertsContent extends StatelessWidget {
-  final bool isDesktop;
-  final UserEntity user;
-
-  const _AlertsContent({required this.isDesktop, required this.user});
+  const _AlertsContent();
 
   @override
   Widget build(BuildContext context) {
+    // Calculate responsiveness locally
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
+
     return BlocBuilder<AlertsBloc, AlertsState>(
       builder: (context, state) {
         if (state is AlertsLoading) {
@@ -104,7 +82,7 @@ class _AlertsContent extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: Colors.grey.withOpacity(0.5),
+                            color: Theme.of(context).dividerColor,
                           ),
                           borderRadius: BorderRadius.circular(8),
                         ),

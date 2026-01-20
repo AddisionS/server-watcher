@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-// Imports
-
+// Domain & Data Imports
 import '../../../../auth/domain/entities/user_entity.dart';
 import '../../../home/data/datasource/home_datasource.dart';
 import '../../../home/data/repositories/home_repository_impl.dart';
 import '../../../home/domain/usecases/room_fetch_usecase.dart';
-import '../../../../home/presentation/widgets/home_drawer.dart';
-import '../../../../home/presentation/widgets/responsive_layout.dart';
 import '../../data/datasource/history_mock_data_source.dart';
 import '../../data/repositories/history_repository_impl.dart';
 import '../../domain/usecases/get_history_usecase.dart';
+
+// Presentation Imports
 import '../bloc/history_bloc.dart';
 import '../bloc/history_event.dart';
 import '../bloc/history_state.dart';
 import '../../../../home/presentation/widgets/sensor_chart.dart';
+import '../../../../home/presentation/widgets/main_layout.dart';
 
 class HistoryPage extends StatelessWidget {
   final UserEntity user;
@@ -24,69 +24,39 @@ class HistoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Dependency Injection
-    // 1. Home feature tools (for rooms)
+    // 1. Dependency Injection
     final homeDataSource = HomeMockDataSourceImpl();
-    final homeRepo = HomeRepositoryImpl(
-      remoteDataSource: homeDataSource,
-    ); //<-- gets room using this repo
+    final homeRepo = HomeRepositoryImpl(remoteDataSource: homeDataSource);
 
-    // 2. History feature tools (for logs)
     final historyDataSource = HistoryMockDataSourceImpl();
     final historyRepo = HistoryRepositoryImpl(
       remoteDataSource: historyDataSource,
-    ); //<-- gets logs using this repo
+    );
 
     return BlocProvider(
       create: (_) => HistoryBloc(
         getRoomsUseCase: GetRoomsUseCase(homeRepo),
         getHistoryUseCase: GetHistoryUseCase(historyRepo),
       )..add(HistoryInitialLoad()),
-      child: Scaffold(
-        appBar: MediaQuery.of(context).size.width < 800
-            ? AppBar(
-                title: const Text("24h Log"),
-                backgroundColor: user.role == 'admin'
-                    ? Colors.redAccent
-                    : Colors.blueAccent,
-              )
-            : null,
-        drawer: MediaQuery.of(context).size.width < 800
-            ? HomeDrawer(user: user)
-            : null,
-        body: ResponsiveLayout(
-          mobileBody: _HistoryContent(isDesktop: false, user: user),
-          desktopBody: Row(
-            children: [
-              SizedBox(width: 250, child: HomeDrawer(user: user)),
-              Expanded(
-                child: Scaffold(
-                  appBar: AppBar(
-                    title: const Text("24h Log"),
-                    backgroundColor: user.role == 'admin'
-                        ? Colors.redAccent
-                        : Colors.blueAccent,
-                    automaticallyImplyLeading: false,
-                  ),
-                  body: _HistoryContent(isDesktop: true, user: user),
-                ),
-              ),
-            ],
-          ),
-        ),
+
+      // 2. USE MAIN LAYOUT
+      child: MainLayout(
+        user: user,
+        title: "24h Log",
+        body: const _HistoryContent(),
       ),
     );
   }
 }
 
 class _HistoryContent extends StatelessWidget {
-  final bool isDesktop;
-  final UserEntity user;
-
-  const _HistoryContent({required this.isDesktop, required this.user});
+  const _HistoryContent();
 
   @override
   Widget build(BuildContext context) {
+    // Calculate responsiveness locally
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
+
     return BlocBuilder<HistoryBloc, HistoryState>(
       builder: (context, state) {
         if (state is HistoryLoading) {
@@ -100,7 +70,7 @@ class _HistoryContent extends StatelessWidget {
 
           return Column(
             children: [
-              // --- 1. Dropdown (Same as before) ---
+              // --- 1. Dropdown ---
               Container(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -117,7 +87,9 @@ class _HistoryContent extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
+                          border: Border.all(
+                            color: Theme.of(context).dividerColor,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: DropdownButtonHideUnderline(
@@ -143,12 +115,9 @@ class _HistoryContent extends StatelessWidget {
                 ),
               ),
 
-              // --- 2. THE GRAPHS (New Section) ---
-              // We put this in a scrollable area so it doesn't overflow on small screens
+              // --- 2. THE GRAPHS ---
               AspectRatio(
-                aspectRatio: isDesktop
-                    ? 3.0
-                    : 1.2, // Fixed height for charts area
+                aspectRatio: isDesktop ? 4 : 1.2,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: isDesktop
@@ -157,7 +126,7 @@ class _HistoryContent extends StatelessWidget {
                             Expanded(
                               child: SensorChart(
                                 title: "24h Temperature",
-                                data: graphData, // Use the Reversed List
+                                data: graphData,
                                 isTemperature: true,
                                 lineColor: Colors.red,
                               ),
@@ -165,7 +134,7 @@ class _HistoryContent extends StatelessWidget {
                             Expanded(
                               child: SensorChart(
                                 title: "24h Humidity",
-                                data: graphData, // Use the Reversed List
+                                data: graphData,
                                 isTemperature: false,
                                 lineColor: Colors.blue,
                               ),
@@ -173,7 +142,6 @@ class _HistoryContent extends StatelessWidget {
                           ],
                         )
                       : PageView(
-                          // On mobile, swipe between graphs
                           children: [
                             SensorChart(
                               title: "24h Temperature",
@@ -194,7 +162,7 @@ class _HistoryContent extends StatelessWidget {
 
               const Divider(thickness: 2),
 
-              // --- 3. The Log List (Existing) ---
+              // --- 3. The Log List ---
               Expanded(
                 child: ListView.separated(
                   padding: const EdgeInsets.all(16),
@@ -207,11 +175,11 @@ class _HistoryContent extends StatelessWidget {
 
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: Colors.grey[200],
+                        backgroundColor: Colors.white10, // Dark mode friendly
                         child: const Icon(
                           Icons.access_time,
                           size: 20,
-                          color: Colors.black54,
+                          color: Colors.white70,
                         ),
                       ),
                       title: Text("Time: $timeString"),

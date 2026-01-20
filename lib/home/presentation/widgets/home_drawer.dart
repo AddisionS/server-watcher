@@ -27,10 +27,7 @@ class HomeDrawer extends StatelessWidget {
             accountName: Text(
               user.username,
 
-              style: const TextStyle(
-                fontSize: 26,
-                color: Color.fromARGB(255, 29, 28, 28),
-              ),
+              style: const TextStyle(fontSize: 26, color: Colors.white),
             ),
             accountEmail: null,
             currentAccountPicture: CircleAvatar(backgroundColor: Colors.white),
