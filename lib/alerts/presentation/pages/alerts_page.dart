@@ -13,7 +13,7 @@ import '../bloc/alerts_bloc.dart';
 import '../bloc/alerts_event.dart';
 import '../bloc/alerts_state.dart';
 // Layout Import
-import '../../../../home/presentation/widgets/main_layout.dart'; // <--- IMPORT THIS
+import '../../../../home/presentation/widgets/main_layout.dart';
 
 class AlertsPage extends StatelessWidget {
   final UserEntity user;
@@ -40,7 +40,7 @@ class AlertsPage extends StatelessWidget {
       child: MainLayout(
         user: user,
         title: "System Alerts",
-        body: const _AlertsContent(), // Cleaner: No params needed
+        body: const _AlertsContent(),
       ),
     );
   }
@@ -82,7 +82,8 @@ class _AlertsContent extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: Theme.of(context).dividerColor,
+                            // FIX 1: Updated opacity method
+                            color: Colors.grey.withValues(alpha: 0.5),
                           ),
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -116,17 +117,21 @@ class _AlertsContent extends StatelessWidget {
                 child: ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: state.alerts.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final alert = state.alerts[index];
                     final timeString =
                         "${alert.timestamp.year}-${alert.timestamp.month}-${alert.timestamp.day} ${alert.timestamp.hour.toString().padLeft(2, '0')}:${alert.timestamp.minute.toString().padLeft(2, '0')}";
 
                     return Card(
-                      color: Colors.red.withOpacity(0.1), // Subtle red tint
+                      // FIX 2: Updated opacity method
+                      color: Colors.red.withValues(alpha: 0.1),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: Colors.red.withOpacity(0.5)),
+                        // FIX 3: Updated opacity method
+                        side: BorderSide(
+                          color: Colors.red.withValues(alpha: 0.5),
+                        ),
                       ),
                       child: ListTile(
                         leading: const Icon(

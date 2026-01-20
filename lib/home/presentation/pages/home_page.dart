@@ -124,7 +124,7 @@ class HomeContent extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     // Subtle background for dark mode
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     border: Border.all(color: Colors.white10),
                   ),
                   child: Row(

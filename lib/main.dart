@@ -78,8 +78,8 @@ class MyApp extends StatelessWidget {
           // Input Fields (TextFields)
           inputDecorationTheme: InputDecorationTheme(
             filled: true,
-            fillColor: Colors.white.withOpacity(
-              0.05,
+            fillColor: Colors.white.withValues(
+              alpha: 0.05,
             ), // Subtle transparent white
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

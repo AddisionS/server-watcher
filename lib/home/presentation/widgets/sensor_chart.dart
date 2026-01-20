@@ -111,7 +111,7 @@ class SensorChart extends StatelessWidget {
                         borderData: FlBorderData(
                           show: true,
                           border: Border.all(
-                            color: Colors.grey.withOpacity(0.5),
+                            color: Colors.grey.withValues(alpha: 0.5),
                           ),
                         ),
                         minY: 0,
@@ -132,7 +132,7 @@ class SensorChart extends StatelessWidget {
                             dotData: const FlDotData(show: false),
                             belowBarData: BarAreaData(
                               show: true,
-                              color: lineColor.withOpacity(0.2),
+                              color: lineColor.withValues(alpha: 0.2),
                             ),
                           ),
                         ],
