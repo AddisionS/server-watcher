@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Import for DateFormat
 import '../../domain/entities/sensor_data_entity.dart';
 
 class SensorChart extends StatelessWidget {
@@ -37,38 +38,76 @@ class SensorChart extends StatelessWidget {
                   ? const Center(child: Text("Waiting for data..."))
                   : LineChart(
                       LineChartData(
+                        // 1. TOOLTIP SETUP (Hover Effect)
                         lineTouchData: LineTouchData(
                           touchTooltipData: LineTouchTooltipData(
                             getTooltipColor: (touchedSpot) => Colors.blueGrey,
-                            getTooltipItems:
-                                (List<LineBarSpot> touchedBarSpots) {
-                                  return touchedBarSpots.map((barSpot) {
-                                    return LineTooltipItem(
-                                      // The text to display (Value)
-                                      barSpot.y.toStringAsFixed(1),
-                                      const TextStyle(
-                                        color: Colors
-                                            .white, // <--- TEXT COLOR IS HERE
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    );
-                                  }).toList();
-                                },
+                            getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+                              return touchedBarSpots.map((barSpot) {
+                                // Get time for this spot
+                                final index = barSpot.x.toInt();
+                                final date = data[index].timestamp;
+                                final timeStr = DateFormat(
+                                  'HH:mm:ss',
+                                ).format(date);
+
+                                return LineTooltipItem(
+                                  // Show Time AND Value
+                                  "$timeStr\n${barSpot.y.toStringAsFixed(1)}",
+                                  const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                );
+                              }).toList();
+                            },
                           ),
                         ),
 
                         gridData: const FlGridData(show: true),
-                        titlesData: const FlTitlesData(
+
+                        // 2. AXIS TITLES SETUP
+                        titlesData: FlTitlesData(
                           bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true, // Enable X-Axis Labels
+                              reservedSize: 30, // Space for text
+                              // Logic to prevent overcrowding labels
+                              // If we have 100 points, show label every 20 points.
+                              // If we have 10 points, show label every 2 points.
+                              interval: data.length > 5
+                                  ? (data.length / 5).floorToDouble()
+                                  : 1.0,
+
+                              getTitlesWidget: (value, meta) {
+                                final index = value.toInt();
+                                // Safety check
+                                if (index >= 0 && index < data.length) {
+                                  final date = data[index].timestamp;
+                                  // Format: "14:30"
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 8.0),
+                                    child: Text(
+                                      DateFormat('HH:mm').format(date),
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return const Text('');
+                              },
+                            ),
+                          ),
+                          topTitles: const AxisTitles(
                             sideTitles: SideTitles(showTitles: false),
                           ),
-                          topTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                          rightTitles: AxisTitles(
+                          rightTitles: const AxisTitles(
                             sideTitles: SideTitles(showTitles: false),
                           ),
                         ),
+
                         borderData: FlBorderData(
                           show: true,
                           border: Border.all(
