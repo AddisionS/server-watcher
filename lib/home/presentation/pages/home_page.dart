@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../auth/domain/entities/user_entity.dart';
 import '../../domain/usecases/room_fetch_usecase.dart';
 import '../../domain/usecases/data_fetch_usecase.dart';
-import '../../data/datasource/home_datasource.dart';
+import '../../data/datasources/home_datasource.dart';
 import '../../data/repositories/home_repository_impl.dart';
 import '../../domain/usecases/thresholds_fetch_usecase.dart';
 

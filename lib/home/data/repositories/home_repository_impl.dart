@@ -1,6 +1,6 @@
 import '../../domain/entities/sensor_data_entity.dart';
 import '../../domain/repositories/home_repo.dart';
-import '../datasource/home_datasource.dart';
+import '../datasources/home_datasource.dart';
 import '../../../config/domain/entities/config_entities.dart';
 
 class HomeRepositoryImpl implements HomeRepository {

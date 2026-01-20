@@ -3,10 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 // Domain & Data Imports
 import '../../../../auth/domain/entities/user_entity.dart';
-import '../../../home/data/datasource/home_datasource.dart';
+import '../../../home/data/datasources/home_datasource.dart';
 import '../../../home/data/repositories/home_repository_impl.dart';
 import '../../../home/domain/usecases/room_fetch_usecase.dart';
-import '../../data/datasource/history_mock_data_source.dart';
+import '../../data/datasources/history_mock_data_source.dart';
 import '../../data/repositories/history_repository_impl.dart';
 import '../../domain/usecases/get_history_usecase.dart';
 
