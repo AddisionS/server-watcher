@@ -103,7 +103,6 @@ class _HistoryContent extends StatelessWidget {
               // --- 1. Dropdown (Same as before) ---
               Container(
                 padding: const EdgeInsets.all(16),
-                color: Colors.grey[100],
                 child: Row(
                   children: [
                     const Text(
@@ -118,7 +117,6 @@ class _HistoryContent extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
                           border: Border.all(color: Colors.grey),
                           borderRadius: BorderRadius.circular(8),
                         ),

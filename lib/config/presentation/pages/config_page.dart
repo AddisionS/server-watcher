@@ -292,7 +292,6 @@ class _ConfigFormState extends State<_ConfigForm> {
         labelText: label,
         border: const OutlineInputBorder(),
         filled: true,
-        fillColor: Colors.grey[50],
       ),
       validator: (value) {
         if (value == null || value.isEmpty) return 'Required';

@@ -39,7 +39,7 @@ class SensorChart extends StatelessWidget {
                       LineChartData(
                         lineTouchData: LineTouchData(
                           touchTooltipData: LineTouchTooltipData(
-                            tooltipBgColor: Colors.blueGrey,
+                            getTooltipColor: (touchedSpot) => Colors.blueGrey,
                             getTooltipItems:
                                 (List<LineBarSpot> touchedBarSpots) {
                                   return touchedBarSpots.map((barSpot) {

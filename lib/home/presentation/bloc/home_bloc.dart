@@ -1,14 +1,17 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../config/domain/entities/config_entities.dart';
 import '../../domain/usecases/room_fetch_usecase.dart';
 import '../../domain/usecases/data_fetch_usecase.dart';
 import '../../domain/entities/sensor_data_entity.dart';
+import '../../domain/usecases/thresholds_fetch_usecase.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetRoomsUseCase getRoomsUseCase;
   final GetSensorStreamUseCase getSensorStreamUseCase;
+  final GetThresholdsUseCase getThresholdsUseCase;
 
   // We keep track of the active connection here
   StreamSubscription<SensorData>? sensorSubscription;
@@ -16,13 +19,19 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   HomeBloc({
     required this.getRoomsUseCase,
     required this.getSensorStreamUseCase,
+    required this.getThresholdsUseCase,
   }) : super(HomeLoading()) {
     // 1. Initial Load
     on<HomeInitialLoad>((event, emit) async {
       emit(HomeLoading());
       try {
-        // Fetch the list of rooms
-        final rooms = await getRoomsUseCase.call();
+        final results = await Future.wait([
+          getRoomsUseCase.call(),
+          getThresholdsUseCase.call(),
+        ]);
+
+        final rooms = results[0] as List<String>;
+        final thresholds = results[1] as ThresholdsEntity;
 
         if (rooms.isNotEmpty) {
           // Default to the first room
@@ -33,7 +42,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
           // Emit initial success state with empty data (waiting for stream)
           emit(
-            HomeLoaded(rooms: rooms, selectedRoom: firstRoom, sensorData: []),
+            HomeLoaded(
+              rooms: rooms,
+              selectedRoom: firstRoom,
+              sensorData: [],
+              thresholds: thresholds,
+            ),
           );
         } else {
           emit(HomeError("No rooms found"));

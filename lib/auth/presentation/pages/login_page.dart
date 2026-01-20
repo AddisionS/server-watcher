@@ -30,8 +30,6 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       // NEW: Add a light background color (looks good on Web)
-      backgroundColor: Colors.grey[200],
-
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -48,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
-                color: Colors.white,
+
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     vertical: 32.0,
@@ -122,8 +120,6 @@ class _LoginPageState extends State<LoginPage> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 filled: true,
-                                fillColor: Colors
-                                    .grey[50], // Slightly lighter inside white card
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -157,7 +153,6 @@ class _LoginPageState extends State<LoginPage> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 filled: true,
-                                fillColor: Colors.grey[50],
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {

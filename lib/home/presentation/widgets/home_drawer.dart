@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../../history/presentation/pages/history_page.dart'; // Import History Page
 import '../../../config/presentation/pages/config_page.dart'; // Import config page
+import '../../../alerts/presentation/pages/alerts_page.dart';
 
 class HomeDrawer extends StatelessWidget {
   final UserEntity user;
@@ -79,7 +80,18 @@ class HomeDrawer extends StatelessWidget {
               );
             },
           ),
-
+          ListTile(
+            leading: const Icon(Icons.warning, color: Colors.orange),
+            title: const Text("Alert Logs"),
+            onTap: () {
+              if (!isDesktop) Navigator.pop(context);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => AlertsPage(user: user)),
+                (route) => false,
+              );
+            },
+          ),
           const Spacer(), // Pushes logout to bottom
           const Divider(),
           ListTile(

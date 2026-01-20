@@ -5,6 +5,13 @@ import '../../domain/usecases/room_fetch_usecase.dart';
 import '../../domain/usecases/data_fetch_usecase.dart';
 import '../../data/datasource/home_datasource.dart';
 import '../../data/repositories/home_repository_impl.dart';
+import '../../domain/usecases/thresholds_fetch_usecase.dart'; // Import this
+import '../widgets/sensor_gauge.dart'; // Import the gauge
+import '../../../export/data/datasources/export_mock_data_source.dart';
+import '../../../export/data/repositories/export_repository_impl.dart';
+import '../../../export/domain/usecases/download_report_usecase.dart';
+import '../../../export/presentation/bloc/export_bloc.dart';
+import '../../../export/presentation/widgets/export_section.dart'; // Import Widget
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
@@ -19,23 +26,29 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Dependency Injection (Same as before)
     final dataSource = HomeMockDataSourceImpl();
     final repo = HomeRepositoryImpl(remoteDataSource: dataSource);
+    final exportRepo = ExportRepositoryImpl(ExportMockDataSourceImpl());
+    final downloadUseCase = DownloadReportUseCase(exportRepo);
 
-    return BlocProvider(
-      create: (_) => HomeBloc(
-        getRoomsUseCase: GetRoomsUseCase(repo),
-        getSensorStreamUseCase: GetSensorStreamUseCase(repo),
-      )..add(HomeInitialLoad()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<HomeBloc>(
+          create: (_) => HomeBloc(
+            getRoomsUseCase: GetRoomsUseCase(repo),
+            getSensorStreamUseCase: GetSensorStreamUseCase(repo),
+            getThresholdsUseCase: GetThresholdsUseCase(repo),
+          )..add(HomeInitialLoad()),
+        ),
+        BlocProvider<ExportBloc>(create: (_) => ExportBloc(downloadUseCase)),
+      ],
       child: Scaffold(
-        // On Mobile: Show AppBar. On Desktop: Hide it (Custom design)
         appBar: MediaQuery.of(context).size.width < 800
             ? AppBar(
                 title: Text("Dashboard (${user.role})"),
                 backgroundColor: user.role == 'admin'
-                    ? const Color.fromARGB(255, 243, 124, 124)
-                    : const Color.fromARGB(255, 98, 143, 221),
+                    ? Colors.redAccent
+                    : Colors.blueAccent,
               )
             : null,
 
@@ -65,7 +78,7 @@ class HomePage extends StatelessWidget {
                     backgroundColor: user.role == 'admin'
                         ? Colors.redAccent
                         : Colors.blueAccent,
-                    automaticallyImplyLeading: false, // Hide hamburger
+                    automaticallyImplyLeading: false,
                   ),
                   body: HomeContent(user: user, isDesktop: true),
                 ),
@@ -102,79 +115,76 @@ class HomeContent extends StatelessWidget {
           final double latestHum = state.sensorData.isNotEmpty
               ? state.sensorData.last.humidity
               : 0.0;
+          final thresholds = state.thresholds;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // --- TOP BAR: DROPDOWN + STATS ---
-                Container(
-                  margin: const EdgeInsets.only(bottom: 20),
-                  child: Row(
-                    // This pushes the Dropdown to left and Stats to right
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // 1. THE DROPDOWN
-                      // We wrap in specific width for Desktop, or Flexible for mobile
-                      ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: isDesktop ? 300 : 200,
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(8),
-                            color: Colors.white,
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: state.selectedRoom,
-                              isExpanded: true,
-                              items: state.rooms
-                                  .map(
-                                    (r) => DropdownMenuItem(
-                                      value: r,
-                                      child: Text(r),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (v) => context.read<HomeBloc>().add(
-                                HomeRoomChanged(v!),
-                              ),
-                            ),
-                          ),
-                        ),
+                // --- TOP BAR ---
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    width: isDesktop ? 300 : double.infinity,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: state.selectedRoom,
+                        isExpanded: true,
+                        items: state.rooms
+                            .map(
+                              (r) => DropdownMenuItem(value: r, child: Text(r)),
+                            )
+                            .toList(),
+                        onChanged: (v) =>
+                            context.read<HomeBloc>().add(HomeRoomChanged(v!)),
                       ),
-
-                      // 2. THE STATS (Right Side)
-                      // Only show if we have data
-                      if (state.sensorData.isNotEmpty)
-                        Row(
-                          children: [
-                            // Temperature Box
-                            _buildStatBadge(
-                              icon: Icons.thermostat,
-                              color: Colors.red,
-                              label: "${latestTemp.toStringAsFixed(1)}°C",
-                            ),
-                            const SizedBox(width: 16),
-                            // Humidity Box
-                            _buildStatBadge(
-                              icon: Icons.water_drop,
-                              color: Colors.blue,
-                              label: "${latestHum.toStringAsFixed(1)}%",
-                            ),
-                          ],
-                        ),
+                    ),
+                  ),
+                ),
+                // --- 2. GAUGES SECTION ---
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      // Temperature Gauge
+                      SensorGauge(
+                        title: "Temperature",
+                        value: double.parse(latestTemp.toStringAsFixed(1)),
+                        unit: "°C",
+                        axisMax: 50,
+                        minThreshold: thresholds.subTemp, // Start of Orange
+                        maxThreshold: thresholds.thresTemp, // Start of Red
+                      ),
+                      // Humidity Gauge
+                      SensorGauge(
+                        title: "Humidity",
+                        value: double.parse(latestHum.toStringAsFixed(1)),
+                        unit: "%",
+                        axisMax: 100,
+                        minThreshold: thresholds.subHum,
+                        maxThreshold: thresholds.thresHum,
+                      ),
                     ],
                   ),
                 ),
 
+                const SizedBox(height: 20),
+
                 // --- GRAPHS LAYOUT ---
                 if (isDesktop)
                   AspectRatio(
-                    aspectRatio: 3.0,
+                    aspectRatio: 4.5,
                     child: Row(
                       children: [
                         Expanded(
@@ -200,7 +210,7 @@ class HomeContent extends StatelessWidget {
                   Column(
                     children: [
                       AspectRatio(
-                        aspectRatio: 1.4,
+                        aspectRatio: 2,
                         child: SensorChart(
                           title: "Temperature",
                           data: state.sensorData,
@@ -216,42 +226,18 @@ class HomeContent extends StatelessWidget {
                       ),
                     ],
                   ),
+
+                const SizedBox(height: 20),
+
+                ExportSection(currentRoom: state.selectedRoom),
+
+                const SizedBox(height: 40),
               ],
             ),
           );
         }
         return const SizedBox();
       },
-    );
-  }
-
-  // Helper widget to make the stats look nice
-  Widget _buildStatBadge({
-    required IconData icon,
-    required Color color,
-    required String label,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: color,
-              fontSize: 16,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:math';
 import '../models/sensor_model.dart';
+import '../../../config/domain/entities/config_entities.dart';
 
 abstract class HomeRemoteDataSource {
   Future<List<String>> fetchRooms();
   Stream<SensorModel> getSensorStream(String room);
+  Future<ThresholdsEntity> fetchThresholds();
 }
 
 class HomeMockDataSourceImpl implements HomeRemoteDataSource {
@@ -38,5 +40,23 @@ class HomeMockDataSourceImpl implements HomeRemoteDataSource {
         humidity: 40.0 + random.nextDouble() * 20,
       );
     });
+  }
+
+  @override
+  Future<ThresholdsEntity> fetchThresholds() async {
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Return dummy thresholds for the Gauge
+    // Logic:
+    // Temp < 24: Safe (Green)
+    // Temp 24-28: Warning (Orange) -> subTemp = 24
+    // Temp > 28: Critical (Red)   -> thresTemp = 28
+    return ThresholdsEntity(
+      subTemp: 24.0,
+      thresTemp: 28.0,
+      subHum: 60.0,
+      thresHum: 80.0,
+    );
   }
 }

@@ -1,6 +1,7 @@
 import '../../domain/entities/sensor_data_entity.dart';
 import '../../domain/repositories/home_repo.dart';
 import '../datasource/home_datasource.dart';
+import '../../../config/domain/entities/config_entities.dart';
 
 class HomeRepositoryImpl implements HomeRepository {
   final HomeRemoteDataSource remoteDataSource;
@@ -16,5 +17,10 @@ class HomeRepositoryImpl implements HomeRepository {
   Stream<SensorData> getSensorStream(String room) {
     // The Model IS A Entity (Inheritance), so we can return it directly.
     return remoteDataSource.getSensorStream(room);
+  }
+
+  @override
+  Future<ThresholdsEntity> getThresholds() async {
+    return await remoteDataSource.fetchThresholds();
   }
 }
