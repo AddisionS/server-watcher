@@ -1,12 +1,13 @@
+import 'dart:math'; // Import math for PI
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 
 class SensorGauge extends StatelessWidget {
   final String title;
   final double value;
-  final double subThreshold; // Start of Orange Zone
-  final double threshold; // Start of Red Zone
-  final double axisMax; // Max value on dial
+  final double subThreshold;
+  final double threshold;
+  final double axisMax;
   final String unit;
 
   const SensorGauge({
@@ -19,16 +20,33 @@ class SensorGauge extends StatelessWidget {
     required this.unit,
   });
 
+  // Helper to calculate the rotation angle in Radians
+  double _getRotationAngle(double currentValue) {
+    // 1. Define gauge constraints (Must match RadialAxis)
+    const double startAngle = 160;
+    const double endAngle = 20;
+
+    // 2. Calculate Total Sweep Angle
+    // Logic: 160 -> 360 is 200 deg. 0 -> 20 is 20 deg. Total = 220.
+    const double totalSweep = (360 - startAngle) + endAngle;
+
+    // 3. Calculate current angle in degrees based on value
+    final double currentAngleDegree =
+        startAngle + (currentValue / axisMax) * totalSweep;
+
+    // 4. Convert to Radians and adjust by +90 degrees
+    // We add 90 degrees so the bottom of the text points towards the center
+    return (currentAngleDegree + 90) * (pi / 180);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 1. The Gauge (Top)
         SizedBox(
           height: 250,
           width: 250,
-
           child: SfRadialGauge(
             axes: <RadialAxis>[
               RadialAxis(
@@ -44,7 +62,6 @@ class SensorGauge extends StatelessWidget {
                   thicknessUnit: GaugeSizeUnit.factor,
                 ),
                 ranges: <GaugeRange>[
-                  // Green Zone
                   GaugeRange(
                     startValue: 0,
                     endValue: subThreshold,
@@ -53,7 +70,6 @@ class SensorGauge extends StatelessWidget {
                     sizeUnit: GaugeSizeUnit.factor,
                     color: Colors.greenAccent,
                   ),
-                  // Orange Zone
                   GaugeRange(
                     startValue: subThreshold,
                     endValue: threshold,
@@ -62,7 +78,6 @@ class SensorGauge extends StatelessWidget {
                     sizeUnit: GaugeSizeUnit.factor,
                     color: Colors.orangeAccent,
                   ),
-                  // Red Zone
                   GaugeRange(
                     startValue: threshold,
                     endValue: axisMax,
@@ -73,19 +88,20 @@ class SensorGauge extends StatelessWidget {
                   ),
                 ],
                 pointers: <GaugePointer>[
+                  // 1. NEEDLE
                   NeedlePointer(
                     value: value,
                     needleColor: Colors.white,
                     tailStyle: const TailStyle(
-                      length: 0.15, // Shorter tail
+                      length: 0.15,
                       width: 5,
                       color: Colors.white,
                     ),
                     needleLength: 0.6,
                     needleStartWidth: 1,
-                    needleEndWidth: 4, // Thinner needle
+                    needleEndWidth: 4,
                     knobStyle: const KnobStyle(
-                      knobRadius: 0.05, // Smaller knob
+                      knobRadius: 0.05,
                       color: Colors.white,
                       borderColor: Colors.white,
                       borderWidth: 0.02,
@@ -93,9 +109,66 @@ class SensorGauge extends StatelessWidget {
                     animationType: AnimationType.ease,
                     enableAnimation: true,
                   ),
+
+                  // --- SUB-THRESHOLD (Orange) ---
+
+                  // 2. Triangle (Auto-rotates)
+                  MarkerPointer(
+                    value: subThreshold,
+                    markerType: MarkerType.invertedTriangle,
+                    markerHeight: 12,
+                    markerWidth: 12,
+                    color: Colors.orangeAccent,
+                    markerOffset: -25,
+                  ),
+
+                  // 3. Text (Manually Rotated)
+                  WidgetPointer(
+                    value: subThreshold,
+                    offset: -45, // Push further out
+                    child: Transform.rotate(
+                      angle: _getRotationAngle(subThreshold),
+                      child: Text(
+                        subThreshold.toStringAsFixed(0),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // --- THRESHOLD (Red) ---
+
+                  // 4. Triangle
+                  MarkerPointer(
+                    value: threshold,
+                    markerType: MarkerType.invertedTriangle,
+                    markerHeight: 12,
+                    markerWidth: 12,
+                    color: Colors.redAccent,
+                    markerOffset: -25,
+                  ),
+
+                  // 5. Text (Manually Rotated)
+                  WidgetPointer(
+                    value: threshold,
+                    offset: -45,
+                    child: Transform.rotate(
+                      angle: _getRotationAngle(threshold),
+                      child: Text(
+                        threshold.toStringAsFixed(0),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
                 annotations: <GaugeAnnotation>[
-                  // Value Text inside the gauge
                   GaugeAnnotation(
                     widget: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -123,16 +196,13 @@ class SensorGauge extends StatelessWidget {
                       ],
                     ),
                     angle: 90,
-                    positionFactor:
-                        0.6, // Moved slightly lower to clear the needle
+                    positionFactor: 0.6,
                   ),
                 ],
               ),
             ],
           ),
         ),
-
-        // 2. The Title (Bottom)
         const SizedBox(height: 20),
         Text(
           title,
