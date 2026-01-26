@@ -41,19 +41,20 @@ class SensorChart extends StatelessWidget {
                         // 1. TOOLTIP SETUP (Hover Effect)
                         lineTouchData: LineTouchData(
                           touchTooltipData: LineTouchTooltipData(
-                            getTooltipColor: (touchedSpot) => Colors.blueGrey,
+                            getTooltipColor: (touchedSpot) =>
+                                const Color.fromARGB(255, 52, 66, 74),
                             getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                               return touchedBarSpots.map((barSpot) {
                                 // Get time for this spot
                                 final index = barSpot.x.toInt();
                                 final date = data[index].timestamp;
                                 final timeStr = DateFormat(
-                                  'HH:mm:ss',
+                                  'HH:mm',
                                 ).format(date);
 
                                 return LineTooltipItem(
                                   // Show Time AND Value
-                                  "$timeStr\n${barSpot.y.toStringAsFixed(1)}",
+                                  "Time: $timeStr\n Val: ${barSpot.y.toStringAsFixed(1)}",
                                   const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -70,7 +71,7 @@ class SensorChart extends StatelessWidget {
                         titlesData: FlTitlesData(
                           bottomTitles: AxisTitles(
                             sideTitles: SideTitles(
-                              showTitles: true, // Enable X-Axis Labels
+                              showTitles: true,
                               reservedSize: 30, // Space for text
                               // Logic to prevent overcrowding labels
                               // If we have 100 points, show label every 20 points.
@@ -138,6 +139,17 @@ class SensorChart extends StatelessWidget {
                         ],
                       ),
                     ),
+            ),
+
+            Center(
+              child: Text(
+                "Time",
+                style: const TextStyle(
+                  color: Colors.white38,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),

@@ -163,7 +163,7 @@ class HomeContent extends StatelessWidget {
                       children: [
                         Expanded(
                           child: SensorChart(
-                            title: "Temperature History",
+                            title: "Temperature",
                             data: state.sensorData,
                             isTemperature: true,
                             lineColor: Colors.red,
@@ -172,7 +172,7 @@ class HomeContent extends StatelessWidget {
                         const SizedBox(width: 24),
                         Expanded(
                           child: SensorChart(
-                            title: "Humidity History",
+                            title: "Humidity",
                             data: state.sensorData,
                             isTemperature: false,
                             lineColor: Colors.blue,
