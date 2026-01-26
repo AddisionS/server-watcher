@@ -26,6 +26,17 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  void _submitLogin() {
+    if (_formKey.currentState!.validate()) {
+      context.read<AuthBloc>().add(
+        AuthLoginRequested(
+          username: userController.text.trim(),
+          password: passController.text.trim(),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,7 +50,6 @@ class _LoginPageState extends State<LoginPage> {
               constraints: const BoxConstraints(
                 maxWidth: 450,
               ), // Max width for Web
-              // --- NEW: THE CARD ---
               // Adds a nice shadow and white background behind the form
               child: Card(
                 elevation: 8, // float effect
@@ -124,6 +134,7 @@ class _LoginPageState extends State<LoginPage> {
                             // --- Username Field ---
                             TextFormField(
                               controller: userController,
+                              textInputAction: TextInputAction.next,
                               decoration: InputDecoration(
                                 labelText: "Username",
                                 prefixIcon: const Icon(Icons.person_outline),
@@ -144,6 +155,8 @@ class _LoginPageState extends State<LoginPage> {
                             // --- Password Field ---
                             TextFormField(
                               controller: passController,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _submitLogin(),
                               obscureText: !isPasswordVisible,
                               decoration: InputDecoration(
                                 labelText: "Password",
@@ -176,16 +189,8 @@ class _LoginPageState extends State<LoginPage> {
 
                             // --- Login Button ---
                             ElevatedButton(
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  context.read<AuthBloc>().add(
-                                    AuthLoginRequested(
-                                      username: userController.text.trim(),
-                                      password: passController.text.trim(),
-                                    ),
-                                  );
-                                }
-                              },
+                              onPressed: _submitLogin,
+
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 20,

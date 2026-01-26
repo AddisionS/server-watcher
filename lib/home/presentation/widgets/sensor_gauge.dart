@@ -4,8 +4,8 @@ import 'package:syncfusion_flutter_gauges/gauges.dart';
 class SensorGauge extends StatelessWidget {
   final String title;
   final double value;
-  final double minThreshold; // Start of Orange Zone
-  final double maxThreshold; // Start of Red Zone
+  final double subThreshold; // Start of Orange Zone
+  final double threshold; // Start of Red Zone
   final double axisMax; // Max value on dial
   final String unit;
 
@@ -13,8 +13,8 @@ class SensorGauge extends StatelessWidget {
     super.key,
     required this.title,
     required this.value,
-    required this.minThreshold,
-    required this.maxThreshold,
+    required this.subThreshold,
+    required this.threshold,
     required this.axisMax,
     required this.unit,
   });
@@ -26,8 +26,8 @@ class SensorGauge extends StatelessWidget {
       children: [
         // 1. The Gauge (Top)
         SizedBox(
-          height: 150,
-          width: 150,
+          height: 250,
+          width: 250,
 
           child: SfRadialGauge(
             axes: <RadialAxis>[
@@ -36,45 +36,43 @@ class SensorGauge extends StatelessWidget {
                 maximum: axisMax,
                 showLabels: false,
                 showTicks: false,
-                startAngle: 180,
-                endAngle: 0,
+                startAngle: 160,
+                endAngle: 20,
                 canScaleToFit: true,
                 axisLineStyle: const AxisLineStyle(
                   thickness: 0.2,
                   thicknessUnit: GaugeSizeUnit.factor,
-                  cornerStyle: CornerStyle.bothCurve,
                 ),
                 ranges: <GaugeRange>[
                   // Green Zone
                   GaugeRange(
                     startValue: 0,
-                    endValue: minThreshold,
-                    color: Colors.greenAccent,
+                    endValue: subThreshold,
                     startWidth: 0.2,
                     endWidth: 0.2,
                     sizeUnit: GaugeSizeUnit.factor,
+                    color: Colors.greenAccent,
                   ),
                   // Orange Zone
                   GaugeRange(
-                    startValue: minThreshold,
-                    endValue: maxThreshold,
-                    color: Colors.orangeAccent,
+                    startValue: subThreshold,
+                    endValue: threshold,
                     startWidth: 0.2,
                     endWidth: 0.2,
                     sizeUnit: GaugeSizeUnit.factor,
+                    color: Colors.orangeAccent,
                   ),
                   // Red Zone
                   GaugeRange(
-                    startValue: maxThreshold,
+                    startValue: threshold,
                     endValue: axisMax,
-                    color: Colors.redAccent,
                     startWidth: 0.2,
                     endWidth: 0.2,
                     sizeUnit: GaugeSizeUnit.factor,
+                    color: Colors.redAccent,
                   ),
                 ],
                 pointers: <GaugePointer>[
-                  // UPDATED NEEDLE STYLE
                   NeedlePointer(
                     value: value,
                     needleColor: Colors.white,
@@ -106,7 +104,7 @@ class SensorGauge extends StatelessWidget {
                         Text(
                           value.toStringAsFixed(1),
                           style: const TextStyle(
-                            fontSize: 22,
+                            fontSize: 32,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -140,8 +138,8 @@ class SensorGauge extends StatelessWidget {
           title,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: Colors.white,
+            fontSize: 18,
+            color: Colors.white54,
           ),
         ),
       ],

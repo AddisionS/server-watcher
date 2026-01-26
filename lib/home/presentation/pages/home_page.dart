@@ -136,8 +136,8 @@ class HomeContent extends StatelessWidget {
                         value: double.parse(latestTemp.toStringAsFixed(1)),
                         unit: "°C",
                         axisMax: 50,
-                        minThreshold: thresholds.subTemp,
-                        maxThreshold: thresholds.thresTemp,
+                        subThreshold: thresholds.subTemp,
+                        threshold: thresholds.thresTemp,
                       ),
                       // Humidity Gauge
                       SensorGauge(
@@ -145,8 +145,8 @@ class HomeContent extends StatelessWidget {
                         value: double.parse(latestHum.toStringAsFixed(1)),
                         unit: "%",
                         axisMax: 100,
-                        minThreshold: thresholds.subHum,
-                        maxThreshold: thresholds.thresHum,
+                        subThreshold: thresholds.subHum,
+                        threshold: thresholds.thresHum,
                       ),
                     ],
                   ),
