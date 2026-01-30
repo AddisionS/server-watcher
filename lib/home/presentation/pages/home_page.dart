@@ -7,8 +7,9 @@ import '../../domain/usecases/room_fetch_usecase.dart';
 import '../../domain/usecases/data_fetch_usecase.dart';
 import '../../data/datasources/home_datasource.dart';
 import '../../data/repositories/home_repository_impl.dart';
-import '../../domain/usecases/thresholds_fetch_usecase.dart';
-
+import '../../../config/data/datasources/config_mock_data_source.dart';
+import '../../../config/data/repositories/config_repository_impl.dart';
+import '../../../config/domain/usecases/get_thresholds_usecase.dart';
 // Export Feature Imports
 import '../../../export/data/datasources/export_mock_data_source.dart';
 import '../../../export/data/repositories/export_repository_impl.dart';
@@ -31,10 +32,15 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Dependency Injection
+    // 1. Home Dependencies (Rooms & Streams)
     final dataSource = HomeMockDataSourceImpl();
     final repo = HomeRepositoryImpl(remoteDataSource: dataSource);
 
+    // 2. Config Dependencies (Thresholds)
+    final configDataSource = ConfigMockDataSourceImpl();
+    final configRepo = ConfigRepositoryImpl(remoteDataSource: configDataSource);
+
+    // 3. Export data to pdf  Dependencies
     final exportRepo = ExportRepositoryImpl(ExportMockDataSourceImpl());
     final downloadUseCase = DownloadReportUseCase(exportRepo);
 
@@ -44,7 +50,7 @@ class HomePage extends StatelessWidget {
           create: (_) => HomeBloc(
             getRoomsUseCase: GetRoomsUseCase(repo),
             getSensorStreamUseCase: GetSensorStreamUseCase(repo),
-            getThresholdsUseCase: GetThresholdsUseCase(repo),
+            getThresholdsUseCase: GetThresholdsUseCase(configRepo),
           )..add(HomeInitialLoad()),
         ),
         BlocProvider<ExportBloc>(create: (_) => ExportBloc(downloadUseCase)),

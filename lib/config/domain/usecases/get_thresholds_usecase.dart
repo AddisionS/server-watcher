@@ -1,8 +1,8 @@
+import 'package:serverwatcher/config/domain/repositories/config_repository.dart';
 import '../../../config/domain/entities/config_entities.dart';
-import '../repositories/home_repo.dart';
 
 class GetThresholdsUseCase {
-  final HomeRepository repository;
+  final ConfigRepository repository;
 
   GetThresholdsUseCase(this.repository);
 

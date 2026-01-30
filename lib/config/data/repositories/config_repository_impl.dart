@@ -16,4 +16,9 @@ class ConfigRepositoryImpl implements ConfigRepository {
   Future<void> updateContacts(ContactEntity contacts) async {
     await remoteDataSource.postContacts(contacts);
   }
+
+  @override
+  Future<ThresholdsEntity> getThresholds() async {
+    return await remoteDataSource.fetchThresholds();
+  }
 }

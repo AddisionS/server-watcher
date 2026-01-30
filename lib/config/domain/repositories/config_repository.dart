@@ -6,4 +6,6 @@ abstract class ConfigRepository {
 
   // Post Contacts
   Future<void> updateContacts(ContactEntity contacts);
+  // Get Thresholds
+  Future<ThresholdsEntity> getThresholds();
 }

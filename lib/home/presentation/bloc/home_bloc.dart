@@ -4,7 +4,7 @@ import '../../../config/domain/entities/config_entities.dart';
 import '../../domain/usecases/room_fetch_usecase.dart';
 import '../../domain/usecases/data_fetch_usecase.dart';
 import '../../domain/entities/sensor_data_entity.dart';
-import '../../domain/usecases/thresholds_fetch_usecase.dart';
+import '../../../config/domain/usecases/get_thresholds_usecase.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
