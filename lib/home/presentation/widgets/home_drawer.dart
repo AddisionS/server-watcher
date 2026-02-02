@@ -8,7 +8,7 @@ import '../../../auth/presentation/pages/login_page.dart';
 import '../../../history/presentation/pages/history_page.dart'; // Import History Page
 import '../../../config/presentation/pages/config_page.dart'; // Import config page
 import '../../../alerts/presentation/pages/alerts_page.dart';
-
+import 'package:intl/intl.dart' show toBeginningOfSentenceCase;
 // Imports
 import '../../../devices/presentation/pages/device_manager_page.dart';
 // ... Data source imports for injection ...
@@ -34,12 +34,11 @@ class HomeDrawer extends StatelessWidget {
         children: [
           UserAccountsDrawerHeader(
             accountName: Text(
-              user.username,
+              toBeginningOfSentenceCase(user.username),
 
               style: const TextStyle(fontSize: 26, color: Colors.white),
             ),
             accountEmail: null,
-            currentAccountPicture: CircleAvatar(backgroundColor: Colors.white),
             decoration: BoxDecoration(
               color: user.role == 'admin'
                   ? Colors.redAccent

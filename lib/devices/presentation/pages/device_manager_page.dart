@@ -67,8 +67,9 @@ class _DeviceManagerPageState extends State<DeviceManagerPage> {
           }
         },
         builder: (context, state) {
-          if (state is! DevicesLoaded)
+          if (state is! DevicesLoaded) {
             return const Center(child: CircularProgressIndicator());
+          }
 
           final selectedDevice = state.selectedDevice;
 

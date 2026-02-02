@@ -2,16 +2,11 @@ import '../../domain/entities/config_entities.dart';
 
 class ThresholdsModel extends ThresholdsEntity {
   ThresholdsModel({
-    required double subTemp,
-    required double thresTemp,
-    required double subHum,
-    required double thresHum,
-  }) : super(
-         subTemp: subTemp,
-         thresTemp: thresTemp,
-         subHum: subHum,
-         thresHum: thresHum,
-       );
+    required super.subTemp,
+    required super.thresTemp,
+    required super.subHum,
+    required super.thresHum,
+  });
 
   // MAP JSON (snake_case from FastAPI) -> DART (camelCase)
   factory ThresholdsModel.fromJson(Map<String, dynamic> json) {
