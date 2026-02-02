@@ -15,12 +15,6 @@ This document maps the main application layers and shows where responsibilities 
 
 ---
 
-## Architecture diagram
-
-![Architecture diagram](./architecture.svg)
-
----
-
 ## Key mappings (quick reference)
 
 | Feature | Bloc | UseCases | Repository | DataSource |
