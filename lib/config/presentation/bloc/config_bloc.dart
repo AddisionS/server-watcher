@@ -1,17 +1,30 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/config_entities.dart';
 import '../../domain/usecases/update_config_usecase.dart';
+import '../../domain/usecases/get_thresholds_usecase.dart';
 import 'config_event.dart';
 import 'config_state.dart';
 
 class ConfigBloc extends Bloc<ConfigEvent, ConfigState> {
   final UpdateThresholdsUseCase updateThresholdsUseCase;
   final UpdateContactsUseCase updateContactsUseCase;
+  final GetThresholdsUseCase getThresholdsUseCase;
 
   ConfigBloc({
     required this.updateThresholdsUseCase,
     required this.updateContactsUseCase,
+    required this.getThresholdsUseCase,
   }) : super(ConfigInitial()) {
+    //intial loading of threshold values for display in text fields
+    on<ConfigInitialLoad>((event, emit) async {
+      emit(ConfigLoading());
+      try {
+        final thresholds = await getThresholdsUseCase.call();
+        emit(ConfigLoaded(thresholds));
+      } catch (e) {
+        emit(ConfigFailure("Failed to load thresholds"));
+      }
+    });
     // Handle Thresholds Submission
     on<SubmitThresholds>((event, emit) async {
       emit(ConfigLoading());
@@ -23,6 +36,7 @@ class ConfigBloc extends Bloc<ConfigEvent, ConfigState> {
           thresHum: event.thresHum,
         );
         await updateThresholdsUseCase.call(entity);
+        add(ConfigInitialLoad()); // Reload updated thresholds
         emit(ConfigSuccess("Thresholds updated successfully!"));
       } catch (e) {
         emit(ConfigFailure("Failed to update thresholds"));

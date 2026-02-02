@@ -53,6 +53,7 @@ class HomePage extends StatelessWidget {
             getThresholdsUseCase: GetThresholdsUseCase(configRepo),
           )..add(HomeInitialLoad()),
         ),
+
         BlocProvider<ExportBloc>(create: (_) => ExportBloc(downloadUseCase)),
       ],
 

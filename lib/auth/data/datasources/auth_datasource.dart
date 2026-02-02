@@ -17,9 +17,17 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<UserModel> loginUser(String username, String password) async {
     //work required auth token
     if (username == 'admin' && password == 'SDC@admin') {
-      return UserModel(username: 'admin', role: 'admin');
+      return UserModel(
+        username: 'admin',
+        role: 'admin',
+        token: 'some_admin_token',
+      );
     } else if (username == 'user' && password == 'SDC@user') {
-      return UserModel(username: 'user', role: 'user');
+      return UserModel(
+        username: 'user',
+        role: 'user',
+        token: 'some_admin_token',
+      );
     } else {
       throw Exception('Wrong username or password !!');
     }
@@ -38,7 +46,11 @@ class AuthDataSourceImpl implements AuthDataSource {
     final role = sharedPreferences.getString('CACHED_ROLE');
 
     if (username != null && role != null) {
-      return UserModel(username: username, role: role);
+      return UserModel(
+        username: username,
+        role: role,
+        token: 'some_admin_token',
+      );
     }
     return null;
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:serverwatcher/config/domain/usecases/get_thresholds_usecase.dart';
 
 // Domain & Data Imports
 import '../../../auth/domain/entities/user_entity.dart';
@@ -28,9 +29,10 @@ class ConfigPage extends StatelessWidget {
 
     return BlocProvider(
       create: (context) => ConfigBloc(
+        getThresholdsUseCase: GetThresholdsUseCase(repo),
         updateThresholdsUseCase: UpdateThresholdsUseCase(repo),
         updateContactsUseCase: UpdateContactsUseCase(repo),
-      ),
+      )..add(ConfigInitialLoad()),
 
       // 2. USE MAIN LAYOUT (Cleaner Structure)
       child: MainLayout(
@@ -100,181 +102,224 @@ class _ConfigFormState extends State<_ConfigForm> {
     // We check width locally just to size buttons
     final isDesktop = MediaQuery.of(context).size.width >= 800;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // --- SECTION 1: THRESHOLDS ---
-        const Text(
-          "Sensor Thresholds",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          "Set the Sub-threshold and threshold values for the server room.",
-          style: TextStyle(color: Colors.white70),
-        ),
-        const SizedBox(height: 20),
+    return BlocListener<ConfigBloc, ConfigState>(
+      listener: (context, state) {
+        if (state is ConfigLoaded) {
+          // --- AUTO-FILL LOGIC ---
+          _subTempCtrl.text = state.thresholds.subTemp.toString();
+          _thresTempCtrl.text = state.thresholds.thresTemp.toString();
+          _subHumCtrl.text = state.thresholds.subHum.toString();
+          _thresHumCtrl.text = state.thresholds.thresHum.toString();
+        }
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // --- SECTION 1: THRESHOLDS ---
+          const Text(
+            "Sensor Thresholds",
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Set the Sub-threshold and threshold values for the server room.",
+            style: TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 20),
 
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _thresholdFormKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Temperature Row
-                  const Text(
-                    "Temperature Range (°C)",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildNumberField(_subTempCtrl, "Sub-Threshold"),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildNumberField(_thresTempCtrl, "Threshold"),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Humidity Row
-                  const Text(
-                    "Humidity Range (%)",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildNumberField(_subHumCtrl, "Sub-Threshold"),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildNumberField(_thresHumCtrl, "Threshold"),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Submit Thresholds Button
-                  SizedBox(
-                    width: isDesktop ? 200 : double.infinity,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.save),
-                      label: const Text("Save Thresholds"),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.blueAccent,
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () {
-                        if (_thresholdFormKey.currentState!.validate()) {
-                          context.read<ConfigBloc>().add(
-                            SubmitThresholds(
-                              subTemp: double.parse(_subTempCtrl.text),
-                              thresTemp: double.parse(_thresTempCtrl.text),
-                              subHum: double.parse(_subHumCtrl.text),
-                              thresHum: double.parse(_thresHumCtrl.text),
-                            ),
-                          );
-                        }
-                      },
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _thresholdFormKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Temperature Row
+                    const Text(
+                      "Temperature Range (°C)",
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildNumberField(
+                            _subTempCtrl,
+                            "Sub-Threshold",
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildNumberField(_thresTempCtrl, "Threshold"),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Humidity Row
+                    const Text(
+                      "Humidity Range (%)",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildNumberField(
+                            _subHumCtrl,
+                            "Sub-Threshold",
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildNumberField(_thresHumCtrl, "Threshold"),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Submit Thresholds Button
+                    SizedBox(
+                      width: isDesktop ? 200 : double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.save),
+                        label: const Text("Save Thresholds"),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Colors.blueAccent,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () {
+                          if (_thresholdFormKey.currentState!.validate()) {
+                            final subT = double.parse(_subTempCtrl.text);
+                            final maxT = double.parse(_thresTempCtrl.text);
+                            final subH = double.parse(_subHumCtrl.text);
+                            final maxH = double.parse(_thresHumCtrl.text);
+
+                            if (subT >= maxT) {
+                              _showError(
+                                context,
+                                "Temperature Sub-Threshold must be less than Threshold",
+                              );
+                              return;
+                            }
+                            if (subH >= maxH) {
+                              _showError(
+                                context,
+                                "Humidity Sub-Threshold must be less than Threshold",
+                              );
+                              return;
+                            }
+                            context.read<ConfigBloc>().add(
+                              SubmitThresholds(
+                                subTemp: double.parse(_subTempCtrl.text),
+                                thresTemp: double.parse(_thresTempCtrl.text),
+                                subHum: double.parse(_subHumCtrl.text),
+                                thresHum: double.parse(_thresHumCtrl.text),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
 
-        const SizedBox(height: 40),
-        const Divider(),
-        const SizedBox(height: 40),
+          const SizedBox(height: 40),
+          const Divider(),
+          const SizedBox(height: 40),
 
-        // --- SECTION 2: ALERTS ---
-        const Text(
-          "Alert Contacts",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          "Configure who receives SMS and Email alerts.",
-          style: TextStyle(color: Colors.white70),
-        ),
-        const SizedBox(height: 20),
+          // --- SECTION 2: ALERTS ---
+          const Text(
+            "Alert Contacts",
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Configure who receives SMS and Email alerts.",
+            style: TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 20),
 
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _contactFormKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Emails
-                  TextFormField(
-                    controller: _emailsCtrl,
-                    decoration: const InputDecoration(
-                      labelText: "Email Addresses",
-                      hintText: "admin@corp.com, manager@corp.com",
-                      helperText: "Separate multiple emails with a comma (,)",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.email),
-                    ),
-                    validator: (v) =>
-                        v!.isEmpty ? "Enter at least one email" : null,
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Phone Numbers
-                  TextFormField(
-                    controller: _phonesCtrl,
-                    decoration: const InputDecoration(
-                      labelText: "Phone Numbers",
-                      hintText: "+1234567890, +0987654321",
-                      helperText: "Separate multiple numbers with a comma (,)",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.phone),
-                    ),
-                    validator: (v) =>
-                        v!.isEmpty ? "Enter at least one number" : null,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Submit Contacts Button
-                  SizedBox(
-                    width: isDesktop ? 200 : double.infinity,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.notifications_active),
-                      label: const Text("Save Contacts"),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.orangeAccent,
-                        foregroundColor: Colors.white,
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _contactFormKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Emails
+                    TextFormField(
+                      controller: _emailsCtrl,
+                      decoration: const InputDecoration(
+                        labelText: "Email Addresses",
+                        hintText: "admin@corp.com, manager@corp.com",
+                        helperText: "Separate multiple emails with a comma (,)",
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.email),
                       ),
-                      onPressed: () {
-                        if (_contactFormKey.currentState!.validate()) {
-                          context.read<ConfigBloc>().add(
-                            SubmitContacts(
-                              emailsString: _emailsCtrl.text,
-                              phonesString: _phonesCtrl.text,
-                            ),
-                          );
-                        }
-                      },
+                      validator: (v) =>
+                          v!.isEmpty ? "Enter at least one email" : null,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 20),
+
+                    // Phone Numbers
+                    TextFormField(
+                      controller: _phonesCtrl,
+                      decoration: const InputDecoration(
+                        labelText: "Phone Numbers",
+                        hintText: "+1234567890, +0987654321",
+                        helperText:
+                            "Separate multiple numbers with a comma (,)",
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.phone),
+                      ),
+                      validator: (v) =>
+                          v!.isEmpty ? "Enter at least one number" : null,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Submit Contacts Button
+                    SizedBox(
+                      width: isDesktop ? 200 : double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.notifications_active),
+                        label: const Text("Save Contacts"),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Colors.orangeAccent,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () {
+                          if (_contactFormKey.currentState!.validate()) {
+                            context.read<ConfigBloc>().add(
+                              SubmitContacts(
+                                emailsString: _emailsCtrl.text,
+                                phonesString: _phonesCtrl.text,
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+
+  void _showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 

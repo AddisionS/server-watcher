@@ -9,6 +9,15 @@ import '../../../history/presentation/pages/history_page.dart'; // Import Histor
 import '../../../config/presentation/pages/config_page.dart'; // Import config page
 import '../../../alerts/presentation/pages/alerts_page.dart';
 
+// Imports
+import '../../../devices/presentation/pages/device_manager_page.dart';
+// ... Data source imports for injection ...
+import '../../../devices/data/datasources/devices_mock_data_source.dart';
+import '../../../devices/data/repositories/devices_repository_impl.dart';
+import '../../../devices/domain/usecases/device_usecases.dart';
+import '../../../devices/presentation/bloc/devices_bloc.dart';
+import '../../../devices/presentation/bloc/devices_event.dart'; // For LoadDevices
+
 class HomeDrawer extends StatelessWidget {
   final UserEntity user;
 
@@ -64,7 +73,6 @@ class HomeDrawer extends StatelessWidget {
                 );
               },
             ),
-
           ListTile(
             leading: const Icon(Icons.history),
             title: const Text("24h Log"),
@@ -85,6 +93,31 @@ class HomeDrawer extends StatelessWidget {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => AlertsPage(user: user)),
+                (route) => false,
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.devices),
+            title: const Text("Device Manager"),
+            onTap: () {
+              final devRepo = DevicesRepositoryImpl(
+                DevicesMockDataSourceImpl(),
+              );
+
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider(
+                    create: (_) => DevicesBloc(
+                      getDevices: GetDevicesUseCase(devRepo),
+                      addDevice: AddDeviceUseCase(devRepo),
+                      updateDevice: UpdateDeviceUseCase(devRepo),
+                      removeDevice: RemoveDeviceUseCase(devRepo),
+                    )..add(LoadDevices()),
+                    child: DeviceManagerPage(user: user),
+                  ),
+                ),
                 (route) => false,
               );
             },

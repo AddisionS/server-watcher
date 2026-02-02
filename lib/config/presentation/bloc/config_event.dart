@@ -1,5 +1,7 @@
 abstract class ConfigEvent {}
 
+class ConfigInitialLoad extends ConfigEvent {}
+
 class SubmitThresholds extends ConfigEvent {
   final double subTemp, thresTemp, subHum, thresHum;
   SubmitThresholds({

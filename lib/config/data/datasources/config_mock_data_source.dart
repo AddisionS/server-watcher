@@ -32,14 +32,9 @@ class ConfigMockDataSourceImpl implements ConfigRemoteDataSource {
     // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 500));
 
-    // Return dummy thresholds for the Gauge
-    // Logic:
-    // Temp < 24: Safe (Green)
-    // Temp 24-28: Warning (Orange) -> subTemp = 24
-    // Temp > 28: Critical (Red)   -> thresTemp = 28
     return ThresholdsEntity(
-      subTemp: 24.0,
-      thresTemp: 28.0,
+      subTemp: 20.0,
+      thresTemp: 30.0,
       subHum: 60.0,
       thresHum: 80.0,
     );

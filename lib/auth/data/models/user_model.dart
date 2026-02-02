@@ -1,8 +1,24 @@
 import '../../domain/entities/user_entity.dart';
 
 class UserModel extends UserEntity {
-  // We just pass the data up to the parent UserEntity
-  UserModel({required super.username, required super.role});
+  UserModel({
+    required super.username,
+    required super.role,
+    required super.token,
+  });
 
-  // Since we are hardcoding, we can keep it simple for now.
+  factory UserModel.fromJson(Map<String, dynamic> json, String username) {
+    return UserModel(
+      username: username,
+      role: json['role'] ?? 'user',
+      token: json['access_token'] ?? '',
+    );
+  }
+  factory UserModel.fromCache(Map<String, dynamic> map) {
+    return UserModel(
+      username: map['username'],
+      role: map['role'],
+      token: map['token'],
+    );
+  }
 }

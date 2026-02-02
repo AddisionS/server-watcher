@@ -1,8 +1,15 @@
+import '../../domain/entities/config_entities.dart';
+
 abstract class ConfigState {}
 
 class ConfigInitial extends ConfigState {}
 
 class ConfigLoading extends ConfigState {}
+
+class ConfigLoaded extends ConfigState {
+  final ThresholdsEntity thresholds;
+  ConfigLoaded(this.thresholds);
+}
 
 class ConfigSuccess extends ConfigState {
   final String message; // "Thresholds Saved" or "Contacts Saved"

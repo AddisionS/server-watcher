@@ -19,7 +19,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLoginRequested>((event, emit) async {
       emit(AuthLoading());
       try {
-        //Call the Domain Layer (The Logic we wrote earlier)
+        //Call the Domain Layer to login
         final user = await loginUseCase.call(event.username, event.password);
         emit(AuthSuccess(user));
       } catch (e) {
