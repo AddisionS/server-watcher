@@ -43,9 +43,3 @@ This document maps the main application layers and shows where responsibilities 
 - To switch from mock to remote: implement the remote data source, then change the repository instantiation in `main.dart` or the page provider to use it.
 
 ---
-
-If you'd like, I can also:
-- Add this `docs/architecture.md` to your project README or
-- Produce a PNG export of the SVG for easier sharing.
-
-Which would you prefer next? 🖼️
