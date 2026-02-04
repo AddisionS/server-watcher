@@ -12,6 +12,5 @@ dependencies = [
     "python-jose>=3.5.0",
     "requests>=2.32.5",
     "smtpemail>=0.4.2",
-    "twilio>=9.10.0",
     "uvicorn[standard]>=0.38.0",
 ]
