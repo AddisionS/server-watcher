@@ -32,3 +32,7 @@ SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USERNAME: str = os.getenv("SMTP_USERNAME")
 SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD")
 SMTP_FROM: str = os.getenv("SMTP_FROM")
+
+GUPSHUP_API_KEY=os.getenv("GUPSHUP_API_KEY")
+GUPSHUP_SOURCE=os.getenv("GUPSHUP_API_KEY")
+GUPSHUP_TEMPLATE_NAME=os.getenv("GUPSHUP_API_KEY")
