@@ -23,4 +23,8 @@ def bootstrap_user() -> None:
     conn.close()
 
     if not exists:
-        add_user(username, password, role)
+        add_user(
+            username=username,
+            password=password,
+            role=role
+        )

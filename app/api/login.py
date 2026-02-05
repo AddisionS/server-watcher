@@ -30,5 +30,6 @@ def login(data: LoginRequest):
 
     return {
         "access_token": token,
+        "token_type": "bearer",
         "role": user["role"],
     }

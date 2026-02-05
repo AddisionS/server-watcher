@@ -5,6 +5,7 @@ description = "Contains backend code for the an IoT server monitoring device"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "bcrypt>=5.0.0",
     "fastapi>=0.125.0",
     "influxdb3-python>=0.16.0",
     "passlib>=1.7.4",
