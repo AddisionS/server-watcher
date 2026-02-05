@@ -5,11 +5,13 @@ from app.api import ingest, login, admin_users, admin_thresholds, metrics, admin
 from app.db.sqlite import init_db
 from app.services.threshold_service import load_thresholds
 from app.services.alert_contact_service import load_alert_contacts
+from app.services.user_bootstrap_service import bootstrap_user
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    bootstrap_user()
     load_thresholds()
     load_alert_contacts()
     yield
