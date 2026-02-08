@@ -6,7 +6,7 @@ from app.db.sqlite import init_db
 from app.services.threshold_service import load_thresholds
 from app.services.alert_contact_service import load_alert_contacts
 from app.services.user_bootstrap_service import bootstrap_user
-
+from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,7 +19,16 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+origins = ["*"]
 
+# 3. Add the Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # <--- Allows POST, GET, PUT, OPTIONS, etc.
+    allow_headers=["*"], # <--- Allows all headers (Authorization, Content-Type)
+)
 app.include_router(ingest.router)
 app.include_router(login.router)
 app.include_router(admin_users.router)
