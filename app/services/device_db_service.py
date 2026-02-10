@@ -30,7 +30,6 @@ def add_device(
         conn.commit()
 
     except sqlite3.IntegrityError as e:
-        # Either device_id or auth_token collision
         raise ValueError("Device already exists or token collision")
 
     except Exception:
@@ -50,8 +49,12 @@ def delete_device(*, device_id: str) -> None:
         (device_id,),
     )
 
+    deleted = cursor.rowcount > 0
+
     conn.commit()
     conn.close()
+
+    return deleted
 
 def count_devices() -> int:
     conn = get_connection()

@@ -6,6 +6,7 @@ from app.db.sqlite import init_db
 from app.services.threshold_service import load_thresholds
 from app.services.alert_contact_service import load_alert_contacts
 from app.services.user_bootstrap_service import bootstrap_user
+from fastapi.middleware.cors import CORSMiddleware
 
 
 @asynccontextmanager
@@ -19,6 +20,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(ingest.router)
 app.include_router(login.router)
