@@ -10,7 +10,7 @@ const char* DEVICE_ID = "";
 const char* AUTH_TOKEN = "";
 
 //---------------Firmware Info--------------------
-const char* FIRMWARE_VERSION = "";
+const char* FIRMWARE_VERSION = "1.2.0";
 
 
 //----------------Custom Message----------------
