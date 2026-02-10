@@ -6,22 +6,21 @@
 #include <LiquidCrystal_I2C.h>  // 16x2 I2C LCD
 
 //----------------Device Credentials----------------
-const char* DEVICE_ID = "";
-const char* AUTH_TOKEN = "";
+const char* DEVICE_ID = "{{DEVICE_ID}}";
+const char* AUTH_TOKEN = "{{AUTH_TOKEN}}";
 
 //---------------Firmware Info--------------------
 const char* FIRMWARE_VERSION = "1.2.0";
-
 
 //----------------Custom Message----------------
 const char* MSG_LINE1 = "Server Watcher";
 const char* MSG_LINE2 = "BY SDC MUJ";
 
 //----------------Backend Endpoint----------------
-const char* SERVER_HOST = "";
-const int SERVER_PORT = 8000;
-const char* INGEST_PATH = "";
-const char* STATUS_PATH = "";
+const char* SERVER_HOST = "{{SERVER_HOST}}";
+const int SERVER_PORT = {{SERVER_PORT}};
+const char* INGEST_PATH = "{{INGEST_PATH}}";
+const char* STATUS_PATH = "{{STATUS_PATH}}";
 
 //---------------W5500 Pins---------------
 #define W5500_RST 4
