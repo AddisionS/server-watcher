@@ -3,7 +3,7 @@ from fastapi.responses import Response
 
 from app.services.device_db_service import count_devices, list_devices, delete_device, add_device, update_device
 from app.core.deps import require_role
-from app.core.roles import ADMIN_WRITE, DEVELOPER
+from app.core.roles import ADMIN, DEVELOPER, USER
 from app.models.device import DeviceCreate, DeviceUpdate
 from app.services.device_id_service import generate_device_id
 from app.services.device_auth_token_service import generate_auth_token
@@ -16,7 +16,7 @@ router = APIRouter(
 
 @router.get("/")
 def get_devices(
-    user=Depends(require_role(ADMIN_WRITE, DEVELOPER)),
+    user=Depends(require_role(ADMIN, DEVELOPER, USER)),
 ):
     return {
         "devices": list_devices()
@@ -24,7 +24,7 @@ def get_devices(
 
 @router.get("/count")
 def get_device_count(
-    user=Depends(require_role(ADMIN_WRITE, DEVELOPER)),
+    user=Depends(require_role(ADMIN, DEVELOPER, USER)),
 ):
     return {
         "count": count_devices()
@@ -33,7 +33,7 @@ def get_device_count(
 @router.delete("/{device_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_device(
     device_id: str,
-    user=Depends(require_role(ADMIN_WRITE, DEVELOPER)),
+    user=Depends(require_role(ADMIN, DEVELOPER)),
 ):
     deleted = delete_device(device_id=device_id)
 
@@ -46,7 +46,7 @@ def remove_device(
 @router.put("/", status_code=status.HTTP_204_NO_CONTENT)
 def update_device(
         data: DeviceUpdate,
-        user=Depends(require_role(ADMIN_WRITE, DEVELOPER))
+        user=Depends(require_role(ADMIN, DEVELOPER))
 ):
 
     updated = update_device(device_id=data.device_id, device_name= data.device_name)
@@ -61,7 +61,7 @@ def update_device(
 @router.post("/")
 def add_device_endpoint(
     data: DeviceCreate,
-    user=Depends(require_role(ADMIN_WRITE, DEVELOPER)),
+    user=Depends(require_role(ADMIN, DEVELOPER)),
 ):
     device_id = generate_device_id()
     auth_token = generate_auth_token()

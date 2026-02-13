@@ -6,7 +6,7 @@ from app.services.metric_services import (
     get_metrics_csv,
 )
 from app.core.deps import require_role
-from app.core.roles import ADMIN_READ, ADMIN_WRITE, DEVELOPER
+from app.core.roles import USER, ADMIN, DEVELOPER
 
 
 router = APIRouter(
@@ -18,7 +18,7 @@ router = APIRouter(
 @router.get("/latest/{device_id}")
 def get_latest_device_metrics(
     device_id: str,
-    user=Depends(require_role(ADMIN_READ, ADMIN_WRITE, DEVELOPER)),
+    user=Depends(require_role(USER, ADMIN, DEVELOPER)),
 ):
     data = get_latest_metrics(device_id)
 
@@ -36,7 +36,7 @@ def export_device_metrics_csv(
     device_id: str,
     start: datetime,
     end: datetime,
-    user=Depends(require_role(ADMIN_READ, ADMIN_WRITE, DEVELOPER)),
+    user=Depends(require_role(USER, ADMIN, DEVELOPER)),
 ):
     if start >= end:
         raise HTTPException(

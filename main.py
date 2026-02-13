@@ -5,7 +5,7 @@ from app.api import ingest, login, admin_users, admin_thresholds, metrics, admin
 from app.db.sqlite import init_db
 from app.services.threshold_service import load_thresholds
 from app.services.alert_contact_service import load_alert_contacts
-from app.services.user_bootstrap_service import bootstrap_user
+from app.services.account_bootstrap_service import bootstrap_user
 from fastapi.middleware.cors import CORSMiddleware
 
 

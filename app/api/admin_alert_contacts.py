@@ -9,7 +9,7 @@ from app.services.alert_contact_service import (
 )
 from app.core.alert_cache import ALERT_EMAILS, ALERT_PHONES
 from app.core.deps import require_role
-from app.core.roles import ADMIN_READ, ADMIN_WRITE, DEVELOPER
+from app.core.roles import USER, ADMIN, DEVELOPER
 
 router = APIRouter(
     prefix="/admin/alerts",
@@ -19,7 +19,7 @@ router = APIRouter(
 
 @router.get("/emails")
 def list_alert_emails(
-    user=Depends(require_role(ADMIN_READ, ADMIN_WRITE, DEVELOPER)),
+    user=Depends(require_role(USER, ADMIN, DEVELOPER)),
 ):
     return {
         "emails": sorted(ALERT_EMAILS)
@@ -29,7 +29,7 @@ def list_alert_emails(
 @router.post("/emails")
 def add_email(
     email: str = Query(..., description="Alert email address"),
-    user=Depends(require_role(ADMIN_WRITE, DEVELOPER)),
+    user=Depends(require_role(ADMIN, DEVELOPER)),
 ):
     try:
         add_alert_email(email)
@@ -48,7 +48,7 @@ def add_email(
 @router.delete("/emails")
 def remove_email(
     email: str = Query(..., description="Alert email address"),
-    user=Depends(require_role(ADMIN_WRITE, DEVELOPER)),
+    user=Depends(require_role(ADMIN, DEVELOPER)),
 ):
     remove_alert_email(email)
 
@@ -60,7 +60,7 @@ def remove_email(
 
 @router.get("/phones")
 def list_alert_phones(
-    user=Depends(require_role(ADMIN_READ, ADMIN_WRITE, DEVELOPER)),
+    user=Depends(require_role(USER, ADMIN, DEVELOPER)),
 ):
     return {
         "phones": sorted(ALERT_PHONES)
@@ -69,7 +69,7 @@ def list_alert_phones(
 @router.post("/phones")
 def add_phone(
     phone: str = Query(..., description="Alert phone number in E.164 format"),
-    user=Depends(require_role(ADMIN_WRITE, DEVELOPER)),
+    user=Depends(require_role(ADMIN, DEVELOPER)),
 ):
     try:
         add_alert_phone(phone)
@@ -87,7 +87,7 @@ def add_phone(
 @router.delete("/phones")
 def remove_phone(
     phone: str = Query(..., description="Alert phone number in E.164 format"),
-    user=Depends(require_role(ADMIN_WRITE, DEVELOPER)),
+    user=Depends(require_role(ADMIN, DEVELOPER)),
 ):
     remove_alert_phone(phone)
 

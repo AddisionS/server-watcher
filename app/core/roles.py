@@ -1,3 +1,3 @@
-ADMIN_WRITE = "admin_write"
-ADMIN_READ = "admin_read"
+ADMIN = "admin"
+USER = "user"
 DEVELOPER = "developer"
