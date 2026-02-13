@@ -5,7 +5,7 @@ from app.api import ingest, login, admin_users, admin_thresholds, metrics, admin
 from app.db.sqlite import init_db
 from app.services.threshold_service import load_thresholds
 from app.services.alert_contact_service import load_alert_contacts
-from app.services.account_bootstrap_service import bootstrap_user
+from app.services.account_bootstrap_service import bootstrap_user, bootstrap_admin, bootstrap_dev
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -13,6 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 async def lifespan(app: FastAPI):
     init_db()
     bootstrap_user()
+    bootstrap_admin()
+    bootstrap_dev()
     load_thresholds()
     load_alert_contacts()
     yield
