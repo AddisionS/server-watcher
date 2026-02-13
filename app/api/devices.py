@@ -44,7 +44,7 @@ def remove_device(
         )
 
 @router.put("/", status_code=status.HTTP_204_NO_CONTENT)
-def update_device(
+def rename_device(
         data: DeviceUpdate,
         user=Depends(require_role(ADMIN, DEVELOPER))
 ):
