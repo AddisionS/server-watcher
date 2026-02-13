@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-from app.api import ingest, login, admin_users, admin_thresholds, metrics, admin_alert_contacts, alerts, dev_logs
+from app.api import ingest, login, admin_users, admin_thresholds, metrics, admin_alert_contacts, alerts, dev_logs, devices, status
 from app.db.sqlite import init_db
 from app.services.threshold_service import load_thresholds
 from app.services.alert_contact_service import load_alert_contacts
@@ -38,3 +38,4 @@ app.include_router(metrics.router)
 app.include_router(admin_alert_contacts.router)
 app.include_router(alerts.router)
 app.include_router(dev_logs.router)
+app.include_router(devices.router)
