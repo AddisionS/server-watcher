@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.models.user import UserCreate, UserOut
 from app.services.user_service import add_user, delete_user, list_users
 from app.core.deps import require_role
-from app.core.roles import ADMIN, DEVELOPER
+from app.core.roles import Role
 
 router = APIRouter(
     prefix="/admin/users",
@@ -13,7 +13,7 @@ router = APIRouter(
 @router.post("/", response_model=UserOut)
 def create_user(
     data: UserCreate,
-    user=Depends(require_role(ADMIN, DEVELOPER)),
+    user=Depends(require_role(Role.ADMIN, Role.DEVELOPER)),
 ):
     try:
         add_user(
@@ -33,7 +33,7 @@ def create_user(
 @router.delete("/{username}")
 def remove_user(
     username: str,
-    user=Depends(require_role(ADMIN, DEVELOPER)),
+    user=Depends(require_role(Role.ADMIN, Role.DEVELOPER)),
 ):
     if username == user["sub"]:
         raise HTTPException(
@@ -47,6 +47,6 @@ def remove_user(
 
 @router.get("/", response_model=list[UserOut])
 def get_users(
-    user=Depends(require_role(ADMIN, DEVELOPER)),
+    user=Depends(require_role(Role.ADMIN, Role.DEVELOPER)),
 ):
     return list_users()

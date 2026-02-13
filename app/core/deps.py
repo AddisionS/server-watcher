@@ -10,7 +10,7 @@ def require_role(*allowed_roles):
             for role in allowed_roles
         ]
 
-        if user["role"] not in normalized_roles:
+        if user["role"].lower() not in normalized_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions",

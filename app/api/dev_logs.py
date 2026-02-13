@@ -3,7 +3,7 @@ from fastapi.responses import PlainTextResponse
 
 from app.services.log_read_service import read_logs
 from app.core.deps import require_role
-from app.core.roles import DEVELOPER
+from app.core.roles import Role
 
 router = APIRouter(
     prefix="/dev/logs",
@@ -13,7 +13,7 @@ router = APIRouter(
 @router.get("/")
 def read_server_logs(
     lines: int = Query(200, ge=10, le=5000),
-    user=Depends(require_role(DEVELOPER)),
+    user=Depends(require_role(Role.DEVELOPER)),
 ):
     logs = read_logs(lines=lines)
 

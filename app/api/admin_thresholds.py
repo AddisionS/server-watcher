@@ -6,7 +6,7 @@ from app.services.threshold_service import (
     update_thresholds,
 )
 from app.core.deps import require_role
-from app.core.roles import ADMIN, DEVELOPER, USER
+from app.core.roles import Role
 
 
 router = APIRouter(
@@ -17,7 +17,7 @@ router = APIRouter(
 
 @router.get("/")
 def read_thresholds(
-    user=Depends(require_role(ADMIN, USER, DEVELOPER)),
+    user=Depends(require_role(Role.ADMIN, Role.USER, Role.DEVELOPER)),
 ):
     return get_thresholds()
 
@@ -25,7 +25,7 @@ def read_thresholds(
 @router.put("/")
 def change_thresholds(
     data: ThresholdUpdate,
-    user=Depends(require_role(ADMIN, DEVELOPER)),
+    user=Depends(require_role(Role.ADMIN, Role.DEVELOPER)),
 ):
     try:
         update_thresholds(

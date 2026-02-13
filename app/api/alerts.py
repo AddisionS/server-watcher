@@ -7,7 +7,7 @@ from app.services.alert_read_service import (
     get_device_alerts_csv,
 )
 from app.core.deps import require_role
-from app.core.roles import USER, ADMIN, DEVELOPER
+from app.core.roles import Role
 
 router = APIRouter(
     prefix="/alerts",
@@ -17,7 +17,7 @@ router = APIRouter(
 @router.get("/")
 def read_all_alerts(
     limit: int = Query(100, ge=1, le=1000),
-    user=Depends(require_role(USER, ADMIN, DEVELOPER)),
+    user=Depends(require_role(Role.USER, Role.ADMIN, Role.DEVELOPER)),
 ):
     return get_all_alerts(limit=limit)
 
@@ -27,7 +27,7 @@ def download_device_alerts_csv(
     device_id: str,
     start: datetime | None = None,
     end: datetime | None = None,
-    user=Depends(require_role(USER, ADMIN, DEVELOPER)),
+    user=Depends(require_role(Role.USER, Role.ADMIN, Role.DEVELOPER)),
 ):
     csv_data = get_device_alerts_csv(
         device_id=device_id,
