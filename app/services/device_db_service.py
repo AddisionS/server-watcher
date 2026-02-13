@@ -40,7 +40,7 @@ def add_device(
         conn.close()
 
 
-def delete_device(*, device_id: str) -> None:
+def delete_device(*, device_id: str) -> bool:
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -55,6 +55,22 @@ def delete_device(*, device_id: str) -> None:
     conn.close()
 
     return deleted
+
+def update_device(*, device_id: str, device_name: str) -> bool:
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "UPDATE devices SET device_name = ? WHERE device_id = ?",
+        (device_name, device_id,),
+    )
+
+    updated = cursor.rowcount > 0
+
+    conn.commit()
+    conn.close()
+
+    return updated
 
 def count_devices() -> int:
     conn = get_connection()

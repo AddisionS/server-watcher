@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 
-from app.services.device_db_service import count_devices, list_devices, delete_device, add_device
+from app.services.device_db_service import count_devices, list_devices, delete_device, add_device, update_device
 from app.core.deps import require_role
 from app.core.roles import ADMIN_WRITE, DEVELOPER
-from app.models.device import DeviceCreate
+from app.models.device import DeviceCreate, DeviceUpdate
 from app.services.device_id_service import generate_device_id
 from app.services.device_auth_token_service import generate_auth_token
 from app.services.firmware_generation_service import generate_firmware
@@ -39,6 +39,20 @@ def remove_device(
 
     if not deleted:
         raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Device not found",
+        )
+
+@router.put("/", status_code=status.HTTP_204_NO_CONTENT)
+def update_device(
+        data: DeviceUpdate,
+        user=Depends(require_role(ADMIN_WRITE, DEVELOPER))
+):
+
+    updated = update_device(device_id=data.device_id, device_name= data.device_name)
+
+    if not updated:
+        raise  HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device not found",
         )
