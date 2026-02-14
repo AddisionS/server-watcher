@@ -19,7 +19,6 @@ def init_db():
                     device_id TEXT PRIMARY KEY,
                     device_name TEXT NOT NULL,
                     auth_token TEXT NOT NULL UNIQUE,
-                    device_location TEXT NOT NULL,
                     created_at  TEXT NOT NULL
                 )
             """)

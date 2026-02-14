@@ -10,7 +10,7 @@ INFLUX_URL: str = os.getenv("INFLUX_URL", "http://127.0.0.1:8181")
 INFLUX_DB: str = os.getenv("INFLUX_DB", "serverwatcher")
 
 SQLITE_PATH: Path = (
-    BASE_DIR / os.getenv("SQLITE_PATH", "data/devices.db")
+    BASE_DIR / os.getenv("SQLITE_PATH", "data/serverwatcher.db")
 ).resolve()
 
 

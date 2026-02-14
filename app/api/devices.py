@@ -81,7 +81,7 @@ def add_device_endpoint(
         add_device(
             device_id=device_id,
             device_name=data.device_name,
-            auth_token=auth_token,
+            auth_token=auth_token
         )
     except ValueError as e:
         raise HTTPException(

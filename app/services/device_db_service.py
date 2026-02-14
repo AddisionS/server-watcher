@@ -30,7 +30,8 @@ def add_device(
         conn.commit()
 
     except sqlite3.IntegrityError as e:
-        raise ValueError("Device already exists or token collision")
+        print("SQLITE ERROR:", e)
+        raise
 
     except Exception:
         logger.error("Failed to add device", exc_info=True)
