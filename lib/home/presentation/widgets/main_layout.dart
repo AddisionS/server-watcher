@@ -16,7 +16,7 @@ class MainLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeColor = user.role == 'admin'
+    final themeColor = user.role == 'ADMIN'
         ? Colors.redAccent
         : Colors.blueAccent;
 

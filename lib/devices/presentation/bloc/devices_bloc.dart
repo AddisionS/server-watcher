@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/usecases/device_usecases.dart';
+import 'package:file_saver/file_saver.dart';
 import 'devices_event.dart';
 import 'devices_state.dart';
 
@@ -49,11 +50,22 @@ class DevicesBloc extends Bloc<DevicesEvent, DevicesState> {
     on<AddDeviceRequested>((event, emit) async {
       emit(DevicesLoading());
       try {
-        await addDevice(event.roomName);
-        emit(DevicesOperationSuccess("Device added successfully"));
-        add(LoadDevices()); // Reload list to show new item
+        // A. Call API -> Get File Data
+        final firmware = await addDevice(event.roomName);
+
+        // B. Trigger Download
+        await FileSaver.instance.saveFile(
+          name: firmware.fileName,
+          bytes: firmware.fileBytes,
+          mimeType: MimeType.text,
+        );
+
+        emit(DevicesOperationSuccess("Device added & Firmware downloaded!"));
+
+        // C. Refresh List to show the new device
+        add(LoadDevices());
       } catch (e) {
-        emit(DevicesError("Failed to add device"));
+        emit(DevicesError("Failed to add device: $e"));
       }
     });
 

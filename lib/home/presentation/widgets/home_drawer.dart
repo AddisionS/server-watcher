@@ -12,11 +12,6 @@ import 'package:intl/intl.dart' show toBeginningOfSentenceCase;
 // Imports
 import '../../../devices/presentation/pages/device_manager_page.dart';
 // ... Data source imports for injection ...
-import '../../../devices/data/datasources/devices_mock_data_source.dart';
-import '../../../devices/data/repositories/devices_repository_impl.dart';
-import '../../../devices/domain/usecases/device_usecases.dart';
-import '../../../devices/presentation/bloc/devices_bloc.dart';
-import '../../../devices/presentation/bloc/devices_event.dart'; // For LoadDevices
 
 class HomeDrawer extends StatelessWidget {
   final UserEntity user;
@@ -40,7 +35,7 @@ class HomeDrawer extends StatelessWidget {
             ),
             accountEmail: null,
             decoration: BoxDecoration(
-              color: user.role == 'admin'
+              color: user.role == 'ADMIN'
                   ? Colors.redAccent
                   : Colors.blueAccent,
             ),
@@ -59,7 +54,7 @@ class HomeDrawer extends StatelessWidget {
           ),
 
           // LOGIC: Only show for Admin
-          if (user.role == 'admin')
+          if (user.role == 'ADMIN')
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text("Configuration"),
@@ -100,22 +95,15 @@ class HomeDrawer extends StatelessWidget {
             leading: const Icon(Icons.devices),
             title: const Text("Device Manager"),
             onTap: () {
-              final devRepo = DevicesRepositoryImpl(
-                DevicesMockDataSourceImpl(),
-              );
+              // 1. DO NOT create a Repository here.
+              // 2. DO NOT create a BlocProvider here.
 
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => BlocProvider(
-                    create: (_) => DevicesBloc(
-                      getDevices: GetDevicesUseCase(devRepo),
-                      addDevice: AddDeviceUseCase(devRepo),
-                      updateDevice: UpdateDeviceUseCase(devRepo),
-                      removeDevice: RemoveDeviceUseCase(devRepo),
-                    )..add(LoadDevices()),
-                    child: DeviceManagerPage(user: user),
-                  ),
+                  // 3. Just return the Page.
+                  // It will look up the widget tree and find the Bloc in Main.dart
+                  builder: (_) => DeviceManagerPage(user: user),
                 ),
                 (route) => false,
               );

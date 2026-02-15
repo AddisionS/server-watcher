@@ -18,7 +18,6 @@ class DeviceManagerPage extends StatefulWidget {
 class _DeviceManagerPageState extends State<DeviceManagerPage> {
   final _roomController = TextEditingController();
 
-  // Helper to show Add Dialog
   void _showAddDialog(BuildContext context) {
     final addController = TextEditingController();
     showDialog(
@@ -71,9 +70,41 @@ class _DeviceManagerPageState extends State<DeviceManagerPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final selectedDevice = state.selectedDevice;
+          if (state.devices.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.devices_other,
+                    size: 80,
+                    color: Colors.grey.withValues(alpha: 0.3),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "No devices configured yet.",
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => _showAddDialog(context),
+                    icon: const Icon(Icons.add),
+                    label: const Text("Add Your First Device"),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      backgroundColor: Colors.blueAccent,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
 
-          // Sync text controller with selection
+          final selectedDevice = state.selectedDevice;
           if (selectedDevice != null &&
               _roomController.text != selectedDevice.roomName) {
             _roomController.text = selectedDevice.roomName;

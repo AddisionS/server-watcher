@@ -13,11 +13,12 @@ import 'auth/domain/usecases/logout_usecase.dart';
 import 'auth/domain/usecases/auth_check_usecase.dart';
 
 // Devices - app-level providers
-import 'devices/data/datasources/devices_mock_data_source.dart';
+import 'devices/data/datasources/devices_datasource.dart';
 import 'devices/data/repositories/devices_repository_impl.dart';
 import 'devices/domain/usecases/device_usecases.dart';
 import 'devices/presentation/bloc/devices_bloc.dart';
 import 'devices/presentation/bloc/devices_event.dart';
+import 'package:http/http.dart' as http;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,15 +32,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final httpClient = http.Client();
-    // final configDataSource = ConfigRemoteDataSourceImpl(
-    //   client: httpClient,
-    //   sharedPreferences: sharedPreferences,
-    // );
-
-    // final configRepo = ConfigRepositoryImpl(remoteDataSource: configDataSource);
-
+    final httpClient = http.Client();
     final authDataSource = AuthDataSourceImpl(
+      client: httpClient,
       sharedPreferences: sharedPreferences,
     );
     final authRepository = AuthRepositoryImpl(authDataSource: authDataSource);
@@ -56,7 +51,12 @@ class MyApp extends StatelessWidget {
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider<DevicesRepositoryImpl>(
-          create: (_) => DevicesRepositoryImpl(DevicesMockDataSourceImpl()),
+          create: (_) => DevicesRepositoryImpl(
+            DevicesRemoteDataSourceImpl(
+              client: httpClient,
+              sharedPreferences: sharedPreferences,
+            ),
+          ),
         ),
       ],
       child: MultiBlocProvider(

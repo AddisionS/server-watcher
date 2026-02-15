@@ -1,5 +1,6 @@
 import '../entities/device_entity.dart';
 import '../repositories/devices_repository.dart';
+import '../entities/device_file_result.dart';
 
 class GetDevicesUseCase {
   final DevicesRepository repo;
@@ -10,7 +11,7 @@ class GetDevicesUseCase {
 class AddDeviceUseCase {
   final DevicesRepository repo;
   AddDeviceUseCase(this.repo);
-  Future<void> call(String roomName) => repo.addDevice(roomName);
+  Future<DeviceFileResult> call(String roomName) => repo.addDevice(roomName);
 }
 
 class UpdateDeviceUseCase {

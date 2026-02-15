@@ -1,5 +1,7 @@
-import '../models/user_model.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/user_model.dart';
 
 abstract class AuthDataSource {
   Future<UserModel> loginUser(String username, String password);
@@ -9,27 +11,35 @@ abstract class AuthDataSource {
 }
 
 class AuthDataSourceImpl implements AuthDataSource {
+  final http.Client client; // Inject HTTP Client
   final SharedPreferences sharedPreferences;
 
-  AuthDataSourceImpl({required this.sharedPreferences});
+  final String baseUrl = "http://127.0.0.1:8000";
+
+  AuthDataSourceImpl({required this.client, required this.sharedPreferences});
 
   @override
   Future<UserModel> loginUser(String username, String password) async {
-    //work required auth token
-    if (username == 'admin' && password == 'SDC@admin') {
-      return UserModel(
-        username: 'admin',
-        role: 'admin',
-        token: 'some_admin_token',
+    final url = Uri.parse('$baseUrl/login');
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': username, 'password': password}),
       );
-    } else if (username == 'user' && password == 'SDC@user') {
-      return UserModel(
-        username: 'user',
-        role: 'user',
-        token: 'some_admin_token',
-      );
-    } else {
-      throw Exception('Wrong username or password !!');
+
+      if (response.statusCode == 200) {
+        final jsonMap = jsonDecode(response.body);
+        print('Login successful: \n $jsonMap');
+        return UserModel.fromJson(jsonMap, username);
+      } else if (response.statusCode == 401) {
+        throw Exception('Invalid Credentials');
+      } else {
+        throw Exception('Server Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Network Error: $e');
     }
   }
 
@@ -37,28 +47,25 @@ class AuthDataSourceImpl implements AuthDataSource {
   Future<void> cacheUser(UserModel user) async {
     await sharedPreferences.setString('CACHED_USERNAME', user.username);
     await sharedPreferences.setString('CACHED_ROLE', user.role);
+    await sharedPreferences.setString('auth_token', user.token);
   }
 
   @override
   Future<UserModel?> getLastUser() async {
-    // Try to get data
     final username = sharedPreferences.getString('CACHED_USERNAME');
     final role = sharedPreferences.getString('CACHED_ROLE');
+    final token = sharedPreferences.getString('auth_token');
 
-    if (username != null && role != null) {
-      return UserModel(
-        username: username,
-        role: role,
-        token: 'some_admin_token',
-      );
+    if (username != null && role != null && token != null) {
+      return UserModel(username: username, role: role, token: token);
     }
     return null;
   }
 
   @override
   Future<void> logout() async {
-    // Clear the data
     await sharedPreferences.remove('CACHED_USERNAME');
     await sharedPreferences.remove('CACHED_ROLE');
+    await sharedPreferences.remove('auth_token');
   }
 }
