@@ -1,17 +1,15 @@
-from datetime import datetime
-
 from app.core.threshold_cache import THRESHOLDS
-from app.services.alert_log_service import log_alert
 from app.services.alert_dispatch_service import dispatch_alert
+from app.services.device_db_service import get_device_name
+from app.core.logger import logger
+from app.db.influx import write_alert
 
 
 def evaluate_and_log_alert(
     *,
     device_id: str,
-    location: str | None,
     temperature: float,
     humidity: float,
-    timestamp: datetime | None
 ) -> None:
     if THRESHOLDS is None:
         return
@@ -31,18 +29,34 @@ def evaluate_and_log_alert(
         breached = True
 
     if breached:
-        log_alert(
-            device_id=device_id,
-            location=location,
-            temperature=temperature,
-            humidity=humidity,
-            timestamp=timestamp
-        )
+        device_name= get_device_name(device_id=device_id)
+        if device_name is None:
+            logger.warning(
+                "Device not found in database",
+                extra={"device_id": device_id}
+            )
+            device_name = "unknown"
+
+        try:
+            write_alert(
+                device_id=device_id,
+                device_name=device_name,
+                temperature=temperature,
+                humidity=humidity
+            )
+        except Exception as e:
+            logger.error(
+                "Failed to write sensor data to InfluxDB",
+                exc_info=True,
+                extra={
+                    "device_id": device_id,
+                    "device_name": device_name,
+                },
+            )
 
         dispatch_alert(
             device_id=device_id,
-            location=location,
+            device_name=device_name,
             temperature=temperature,
             humidity=humidity,
-            timestamp=timestamp
         )

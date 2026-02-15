@@ -8,36 +8,27 @@ from app.core.logger import logger
 def dispatch_alert(
     *,
     device_id: str,
-    location: str | None,
+    device_name: str | None,
     temperature: float,
     humidity: float,
-    timestamp: datetime | None,
 ) -> None:
-    loc = location or "Unknown location"
+    device_name = device_name or "Unknown location"
 
-    if timestamp is None:
-        ts = datetime.now(timezone.utc)
-    elif timestamp.tzinfo is None:
-        ts = timestamp.replace(tzinfo=timezone.utc)
-    else:
-        ts = timestamp
+    ts = datetime.now(timezone.utc)
 
-    # ---------- Normalized values ----------
     temperature_str = f"{temperature:.1f} °C"
     humidity_str = f"{humidity:.1f} %"
     timestamp_str = ts.strftime("%d %b %Y, %H:%M:%S %Z")
 
-    # ---------- Email message (free text) ----------
     email_body = (
         "🚨 ServerWatcher Alert 🚨\n\n"
         f"Device ID: {device_id}\n"
-        f"Location: {loc}\n"
+        f"Device Name: {device_name}\n"
         f"Temperature: {temperature_str}\n"
         f"Humidity: {humidity_str}\n"
         f"Time: {timestamp_str}\n"
     )
 
-    # ---------- Dispatch Email ----------
     try:
         send_email(
             subject="ServerWatcher Alert",
@@ -49,11 +40,10 @@ def dispatch_alert(
             exc_info=True,
         )
 
-    # ---------- Dispatch WhatsApp ----------
     try:
         send_whatsapp_alert(
             device_id=device_id,
-            location=loc,
+            location=device_name,
             temperature=temperature_str,
             humidity=humidity_str,
             timestamp=timestamp_str,

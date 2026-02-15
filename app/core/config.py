@@ -8,6 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 INFLUX_URL: str = os.getenv("INFLUX_URL", "http://127.0.0.1:8181")
 INFLUX_DB: str = os.getenv("INFLUX_DB", "serverwatcher")
+INFLUX_TOKEN: str = os.getenv("INFLUX_TOKEN")
 
 SQLITE_PATH: Path = (
     BASE_DIR / os.getenv("SQLITE_PATH", "data/serverwatcher.db")

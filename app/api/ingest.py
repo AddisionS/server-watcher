@@ -16,18 +16,14 @@ async def ingest_data(payload: IngestPayload):
 
     write_sensor_data(
         device_id=payload.device_id,
-        location=payload.location,
         temperature=payload.temperature,
         humidity=payload.humidity,
-        timestamp=payload.timestamp,
     )
 
     evaluate_and_log_alert(
         device_id=payload.device_id,
-        location=payload.location,
         temperature=payload.temperature,
         humidity=payload.humidity,
-        timestamp=payload.timestamp
     )
 
     return {"status": "ok"}

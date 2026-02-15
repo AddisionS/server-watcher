@@ -5800,3 +5800,14 @@ sqlite3.OperationalError: table users has no column named password
 2026-02-09 22:01:56,524 | WARNING | serverwatcher | Unauthorized device attempt: device_id = ESP32_W5500
 2026-02-09 22:01:58,524 | WARNING | serverwatcher | Unauthorized device attempt: device_id = ESP32_W5500
 2026-02-09 22:02:00,523 | WARNING | serverwatcher | Unauthorized device attempt: device_id = ESP32_W5500
+2026-02-15 00:37:12,083 | ERROR | serverwatcher | Failed to write sensor data to InfluxDB
+Traceback (most recent call last):
+  File "C:\Users\Hp\PycharmProjects\ServerWatcher\app\services\ingest_service.py", line 31, in write_sensor_data
+    write_metrics_lp(line)
+    ~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Hp\PycharmProjects\ServerWatcher\app\db\influx.py", line 55, in write_metrics_lp
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Hp\PycharmProjects\ServerWatcher\.venv\Lib\site-packages\requests\models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: http://127.0.0.1:8181/api/v3/write_lp?db=serverwatcher_metrics

@@ -107,3 +107,19 @@ def list_devices() -> list[dict]:
         }
         for row in rows
     ]
+
+def get_device_name(*, device_id: str) -> str | None:
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT device_name FROM device WHERE device_id=?",
+        (device_id,),
+    )
+
+    result = cursor.fetchone()
+    conn.close()
+
+    if result:
+        return result[0]
+    return None

@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-
 from app.api import ingest, login, admin_users, admin_thresholds, metrics, admin_alert_contacts, alerts, dev_logs, devices, status
 from app.db.sqlite import init_db
+from app.db.influx import create_database
 from app.services.threshold_service import load_thresholds
 from app.services.alert_contact_service import load_alert_contacts
 from app.services.account_bootstrap_service import bootstrap_user, bootstrap_admin, bootstrap_dev
@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    create_database()
     bootstrap_user()
     bootstrap_admin()
     bootstrap_dev()
