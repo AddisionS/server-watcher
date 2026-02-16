@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.db.influx import query_alerts
+from app.db.influx import query_data
 
 def get_all_alerts(limit: int = 100) -> list[dict]:
     sql = f"""
@@ -13,7 +13,7 @@ def get_all_alerts(limit: int = 100) -> list[dict]:
     ORDER BY time DESC
     LIMIT {limit}
     """
-    return query_alerts(sql)
+    return query_data(sql)
 
 
 def get_device_alerts_csv(
@@ -43,7 +43,7 @@ def get_device_alerts_csv(
     ORDER BY time ASC
     """
 
-    rows = query_alerts(sql)
+    rows = query_data(sql)
 
     # CSV
     lines = ["time,device_id,location,temperature,humidity"]

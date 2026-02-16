@@ -1,4 +1,4 @@
-from app.db.influx import query_metrics
+from app.db.influx import query_data
 from datetime import datetime
 
 
@@ -8,24 +8,24 @@ def get_latest_metrics(device_id: str) -> dict | None:
         time,
         temperature,
         humidity
-    FROM sensor_readings
+    FROM metrics
     WHERE device_id = '{device_id}'
     ORDER BY time DESC
     LIMIT 1
     """
 
-    rows = query_metrics(sql)
+    result = query_data(sql)
 
-    if not rows:
+    if not result:
         return None
 
-    row = rows[0]
+    row = result[0]
 
     return {
         "device_id": device_id,
-        "timestamp": row["time"],
-        "temperature": row["temperature"],
-        "humidity": row["humidity"],
+        "timestamp": row.get("time"),
+        "temperature": row.get("temperature"),
+        "humidity": row.get("humidity"),
     }
 
 def get_metrics_csv(
@@ -46,7 +46,7 @@ def get_metrics_csv(
     ORDER BY time ASC
     """
 
-    rows = query_metrics(sql)
+    rows = query_data(sql)
 
     lines = ["time,temperature,humidity"]
 
