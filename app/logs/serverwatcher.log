@@ -5811,3 +5811,11 @@ Traceback (most recent call last):
   File "C:\Users\Hp\PycharmProjects\ServerWatcher\.venv\Lib\site-packages\requests\models.py", line 1026, in raise_for_status
     raise HTTPError(http_error_msg, response=self)
 requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: http://127.0.0.1:8181/api/v3/write_lp?db=serverwatcher_metrics
+2026-02-16 23:37:06,990 | WARNING | serverwatcher | Unauthorized device attempt: device_id = esp-f80c72ffa5e9
+2026-02-16 23:37:08,997 | WARNING | serverwatcher | Unauthorized device attempt: device_id = esp-f80c72ffa5e9
+2026-02-16 23:37:10,987 | WARNING | serverwatcher | Unauthorized device attempt: device_id = esp-f80c72ffa5e9
+2026-02-16 23:37:12,985 | WARNING | serverwatcher | Unauthorized device attempt: device_id = esp-f80c72ffa5e9
+2026-02-16 23:37:14,987 | WARNING | serverwatcher | Unauthorized device attempt: device_id = esp-f80c72ffa5e9
+2026-02-16 23:37:16,985 | WARNING | serverwatcher | Unauthorized device attempt: device_id = esp-f80c72ffa5e9
+2026-02-16 23:37:18,985 | WARNING | serverwatcher | Unauthorized device attempt: device_id = esp-f80c72ffa5e9
+2026-02-16 23:47:03,910 | WARNING | serverwatcher | Unauthorized device attempt: device_id = esp-f80c72ffa5e9

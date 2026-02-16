@@ -14,9 +14,9 @@ def generate_firmware(
         template
         .replace("{{DEVICE_ID}}", device_id)
         .replace("{{AUTH_TOKEN}}", auth_token)
-        .replace("{{FIRMWARE_VERSION}}", FIRMWARE_VERSION)
-        .replace("{{SERVER_HOST}}", SERVER_HOST)
-        .replace("{{SERVER_PORT}}", SERVER_PORT)
+        .replace("{{FIRMWARE_VERSION}}", str(FIRMWARE_VERSION))
+        .replace("{{SERVER_HOST}}", str(SERVER_HOST))
+        .replace("{{SERVER_PORT}}", str(SERVER_PORT))
         .replace("{{INGEST_PATH}}", "/ingest")
         .replace("{{STATUS_PATH}}", "/status")
     )
