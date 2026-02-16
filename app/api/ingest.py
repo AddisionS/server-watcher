@@ -9,7 +9,7 @@ router = APIRouter(
     tags=["ingest"],
 )
 
-@router.post("/")
+@router.post("")
 async def ingest_data(payload: IngestPayload):
     if not is_device_authorized(
         device_id=payload.device_id,
