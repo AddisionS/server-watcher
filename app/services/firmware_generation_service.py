@@ -1,5 +1,5 @@
 from pathlib import  Path
-from app.core.config import SERVER_HOST, SERVER_PORT
+from app.core.config import SERVER_HOST, SERVER_PORT, FIRMWARE_VERSION
 
 FIRMWARE_TEMPLATE = Path("app/firmware/firmware_template.ino")
 
@@ -14,6 +14,7 @@ def generate_firmware(
         template
         .replace("{{DEVICE_ID}}", device_id)
         .replace("{{AUTH_TOKEN}}", auth_token)
+        .replace("{{FIRMWARE_VERSION}}", FIRMWARE_VERSION)
         .replace("{{SERVER_HOST}}", SERVER_HOST)
         .replace("{{SERVER_PORT}}", SERVER_PORT)
         .replace("{{INGEST_PATH}}", "/ingest")

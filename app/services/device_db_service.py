@@ -113,7 +113,7 @@ def get_device_name(*, device_id: str) -> str | None:
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT device_name FROM device WHERE device_id=?",
+        "SELECT device_name FROM devices WHERE device_id=?",
         (device_id,),
     )
 

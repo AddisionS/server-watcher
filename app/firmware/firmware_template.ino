@@ -10,7 +10,7 @@ const char* DEVICE_ID = "{{DEVICE_ID}}";
 const char* AUTH_TOKEN = "{{AUTH_TOKEN}}";
 
 //---------------Firmware Info--------------------
-const char* FIRMWARE_VERSION = "1.2.0";
+const char* FIRMWARE_VERSION = "{{FIRMWARE_VERSION}}";
 
 //----------------Custom Message----------------
 const char* MSG_LINE1 = "Server Watcher";
@@ -214,7 +214,7 @@ void loop() {
     status += "\"device_id\":\"" + String(DEVICE_ID) + "\",";
     status += "\"auth_token\":\"" + String(AUTH_TOKEN) + "\",";
     status += "\"firmware\":\"" + String(FIRMWARE_VERSION) + "\",";
-    status += "\"uptime_sec\":" + String(now / 1000) + ",";
+    status += "\"uptime_sec\":" + String(now / 1000.0, 2) + ",";
     status += "\"components\":{";
     status += "\"sensor\":\"" + String(sensor_ok ? "ok" : "dead") + "\",";
     status += "}";

@@ -4,9 +4,12 @@ from app.services.device_auth_service import is_device_authorized
 from app.services.ingest_service import write_sensor_data
 from app.services.alert_eval_service import evaluate_and_log_alert
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/ingest",
+    tags=["ingest"],
+)
 
-@router.post("/ingest")
+@router.post("/")
 async def ingest_data(payload: IngestPayload):
     if not is_device_authorized(
         device_id=payload.device_id,
