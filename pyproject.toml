@@ -8,6 +8,7 @@ dependencies = [
     "bcrypt>=5.0.0",
     "fastapi>=0.125.0",
     "influxdb3-python>=0.16.0",
+    "pandas>=3.0.0",
     "passlib>=1.7.4",
     "pydantic>=2.12.5",
     "python-jose>=3.5.0",

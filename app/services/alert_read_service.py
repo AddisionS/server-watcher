@@ -1,58 +1,66 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.db.influx import query_data
 
+
 def get_all_alerts(limit: int = 100) -> list[dict]:
+    limit = int(limit)
+    limit = max(1, min(limit, 1000))
+
     sql = f"""
     SELECT
         time,
         device_id,
-        location,
+        device_name,
         temperature,
         humidity
-    FROM alert_events
+    FROM alerts
     ORDER BY time DESC
     LIMIT {limit}
     """
+
     return query_data(sql)
 
 
 def get_device_alerts_csv(
     *,
     device_id: str,
-    start: datetime | None = None,
-    end: datetime | None = None,
+    start: datetime,
+    end: datetime,
 ) -> str:
-    where_clauses = [f"device_id = '{device_id}'"]
 
-    if start:
-        where_clauses.append(f"time >= '{start.isoformat()}'")
-    if end:
-        where_clauses.append(f"time <= '{end.isoformat()}'")
+    if not device_id.isalnum():
+        raise ValueError("Invalid device_id")
 
-    where_sql = " AND ".join(where_clauses)
+    start = start.astimezone(timezone.utc)
+    end = end.astimezone(timezone.utc)
 
     sql = f"""
     SELECT
         time,
         device_id,
-        location,
+        device_name,
         temperature,
         humidity
-    FROM alert_events
-    WHERE {where_sql}
+    FROM alerts
+    WHERE device_id = '{device_id}'
+      AND time >= '{start.isoformat()}'
+      AND time <= '{end.isoformat()}'
     ORDER BY time ASC
     """
 
     rows = query_data(sql)
 
-    # CSV
-    lines = ["time,device_id,location,temperature,humidity"]
+    lines = ["time,device_id,device_name,temperature,humidity"]
 
     for row in rows:
+        timestamp = row["time"]
+        if hasattr(timestamp, "isoformat"):
+            timestamp = timestamp.isoformat()
+
         lines.append(
-            f"{row['time']},"
+            f"{timestamp},"
             f"{row['device_id']},"
-            f"{row.get('location','')},"
+            f"{row.get('device_name', '')},"
             f"{row['temperature']},"
             f"{row['humidity']}"
         )

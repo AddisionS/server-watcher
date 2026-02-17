@@ -1,52 +1,61 @@
 import requests
+from influxdb_client_3 import InfluxDBClient3
 from app.core.config import INFLUX_URL, INFLUX_TOKEN, INFLUX_DB
+from app.core.logger import logger
 from typing import Dict, Any
 
+client = InfluxDBClient3(
+    host=INFLUX_URL,
+    database=INFLUX_DB,
+    token=INFLUX_TOKEN
+)
+
+def database_exists() -> bool:
+    url = f"{INFLUX_URL}/api/v3/configure/database"
+    headers = {
+        "Authorization": f"Bearer {INFLUX_TOKEN}",
+    }
+    try:
+        response = requests.get(url, headers=headers, params={"format": "json"})
+        if response.status_code == 200:
+            databases = response.json()
+            return any(db.get("iox::database") == INFLUX_DB for db in databases)
+        return False
+    except Exception as e:
+        logger.exception(f"Exception while checking existing database: {e}")
+        return False
+
+
 def create_database():
+    if database_exists():
+        return True
+
     url = f"{INFLUX_URL}/api/v3/configure/database"
     headers = {
         "Authorization": f"Bearer {INFLUX_TOKEN}",
         "Content-Type": "application/json"
     }
-    payload = {
-        "db": INFLUX_DB
-    }
+    payload = {"db": INFLUX_DB}
+
     try:
         response = requests.post(url, headers=headers, json=payload)
-
-        if response.status_code == 200:
-            return True
-        elif response.status_code == 409:
-            return True
-        else:
-            return False
-
-    except requests.exceptions.RequestException as e:
+        return response.status_code == 200
+    except Exception as e:
+        logger.exception(f"Exception while creating database: {e}")
         return False
 
 def write_data(*, measurement: str, tags: Dict[str, str], fields: Dict[str, Any]) -> bool:
-    tag_str = ','.join([f"{k}={v}" for k, v in tags.items()]) if tags else ""
-    field_str = ','.join([f"{k}={v}" for k, v in fields.items()])
-
-    if tag_str:
-        line_protocol = f"{measurement},{tag_str} {field_str}"
-    else:
-        line_protocol = f"{measurement} {field_str}"
-
-    headers = {
-        "Authorization": f"Bearer {INFLUX_TOKEN}",
-        "Content-Type": "text/plain"
+    point = {
+        "measurement": measurement,
+        "tags": tags,
+        "fields": fields
     }
 
     try:
-        response = requests.post(
-            f"{INFLUX_URL}/api/v3/write_lp?db={INFLUX_DB}",
-            headers=headers,
-            data=line_protocol,
-            timeout=2
-        )
-        return response.status_code == 204
-    except requests.exceptions.RequestException:
+        client.write(record=point)
+        return True
+    except Exception as e:
+        logger.exception(f"Failed to write to influxdb: {e}")
         return False
 
 def write_metric(*, device_id: str, device_name: str, temperature: float, humidity: float):
@@ -62,27 +71,6 @@ def write_alert(*, device_id: str, device_name: str, temperature: float, humidit
                       )
 
 def query_data(sql: str):
-    headers = {
-        "Authorization": f"Bearer {INFLUX_TOKEN}",
-        "Content-Type": "text/plain"
-    }
-
-    try:
-        response = requests.post(
-            f"{INFLUX_URL}/api/v3/query_sql?db={INFLUX_DB}",
-            headers=headers,
-            json={"query": sql},
-            timeout=5
-        )
-        response.raise_for_status()
-        result = response.json()
-
-        if isinstance(result, list):
-            return result
-        elif isinstance(result, dict) and 'data' in result:
-            return result['data']
-        else:
-            return []
-
-    except requests.exceptions.RequestException:
-        return []
+    table = client.query(sql)
+    df = table.to_pandas()
+    return df.to_dict(orient="records")

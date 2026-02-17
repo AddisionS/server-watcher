@@ -1,7 +1,7 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
-
+from app.services.device_db_service import get_device_name
 from app.services.alert_read_service import (
     get_all_alerts,
     get_device_alerts_csv,
@@ -35,7 +35,8 @@ def download_device_alerts_csv(
         end=end,
     )
 
-    filename = f"alerts_{device_id}.csv"
+    device_name = get_device_name(device_id=device_id)
+    filename = f"alerts_{device_name}_{device_id}.csv"
 
     return Response(
         content=csv_data,

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from datetime import datetime
-
+from app.services.device_db_service import get_device_name
 from app.services.metric_services import (
     get_latest_metrics,
     get_metrics_csv,
@@ -50,7 +50,8 @@ def export_device_metrics_csv(
         end=end,
     )
 
-    filename = f"{device_id}_{start.date()}_{end.date()}.csv"
+    device_name = get_device_name(device_id=device_id)
+    filename = f"{device_name}_{device_id}_{start.date()}_{end.date()}.csv"
 
     return Response(
         content=csv_data,
