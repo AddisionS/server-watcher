@@ -4,6 +4,8 @@ abstract class HomeEvent {}
 
 class HomeInitialLoad extends HomeEvent {}
 
+class HomeStopPolling extends HomeEvent {}
+
 class HomeDeviceChanged extends HomeEvent {
   final String deviceId;
   HomeDeviceChanged(this.deviceId);

@@ -63,6 +63,16 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         emit(currentState.copyWith(sensorData: updatedList));
       }
     });
+
+    on<HomeStopPolling>((event, emit) {
+      sensorSubscription?.cancel(); // Kill the stream
+      sensorSubscription = null;
+      // Optional: Clear data from UI
+      if (state is HomeLoaded) {
+        final curr = state as HomeLoaded;
+        emit(curr.copyWith(sensorData: []));
+      }
+    });
   }
 
   // Renamed helper function

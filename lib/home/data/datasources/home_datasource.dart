@@ -30,30 +30,44 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Stream<SensorModel> getSensorStream(String deviceId) async* {
-    // Continuous Polling Loop
-    while (true) {
-      try {
-        final url = Uri.parse('$baseUrl/metrics/latest/$deviceId');
+  Stream<SensorModel> getSensorStream(String deviceId) {
+    // 1. Create a Controller
+    late StreamController<SensorModel> controller;
+    bool isActive = true; // The Kill Switch flag
 
-        final response = await client.get(url, headers: _getHeaders());
+    controller = StreamController<SensorModel>(
+      onListen: () async {
+        // Start the loop ONLY when someone listens
+        while (isActive) {
+          try {
+            final url = Uri.parse('$baseUrl/metrics/latest/$deviceId');
+            final response = await client.get(url, headers: _getHeaders());
 
-        if (response.statusCode == 200) {
-          final jsonMap = json.decode(response.body);
-          final data = SensorModel.fromJson(jsonMap);
-          print("Received Sensor Data: $data");
-          yield data;
-        } else {
-          // Optional: Log error or yield a specific error state
-          // For now, we just ignore failed ticks to keep the stream alive
-          print("Polling Error: ${response.statusCode}");
+            // Check flag again after await (Crucial!)
+            if (!isActive) break;
+
+            if (response.statusCode == 200) {
+              final jsonMap = json.decode(response.body);
+              final data = SensorModel.fromJson(jsonMap);
+              controller.add(data); // Push data
+            } else {
+              print("Polling Error: ${response.statusCode}");
+            }
+          } catch (e) {
+            print("Network Error: $e");
+          }
+
+          // Wait 2 seconds, but check flag periodically or after wait
+          if (!isActive) break;
+          await Future.delayed(const Duration(seconds: 2));
         }
-      } catch (e) {
-        print("Network Error during polling: $e");
-      }
+        await controller.close();
+      },
+      onCancel: () {
+        isActive = false;
+      },
+    );
 
-      // Wait 2 seconds before asking again
-      await Future.delayed(const Duration(seconds: 2));
-    }
+    return controller.stream;
   }
 }

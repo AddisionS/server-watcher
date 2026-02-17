@@ -67,11 +67,17 @@ class HomePage extends StatelessWidget {
       ],
       child: BlocListener<DevicesBloc, DevicesState>(
         listenWhen: (prev, curr) =>
-            curr is DevicesLoaded && curr.devices.isNotEmpty,
+            prev is DevicesLoading && curr is DevicesLoaded,
         listener: (context, state) {
-          if (state is DevicesLoaded && state.devices.isNotEmpty) {
-            final firstDeviceId = state.devices.first.id;
-            context.read<HomeBloc>().add(HomeDeviceChanged(firstDeviceId));
+          if (state is DevicesLoaded) {
+            if (state.devices.isNotEmpty) {
+              // Case A: We have devices -> Start Polling
+              final firstDeviceId = state.devices.first.id;
+              context.read<HomeBloc>().add(HomeDeviceChanged(firstDeviceId));
+            } else {
+              // Case B: No devices -> STOP Polling
+              context.read<HomeBloc>().add(HomeStopPolling());
+            }
           }
         },
         child: MainLayout(
