@@ -33,15 +33,32 @@ class HistoryPage extends StatelessWidget {
     );
 
     return BlocProvider(
-      create: (_) =>
-          HistoryBloc(getHistoryUseCase: GetHistoryUseCase(historyRepo))
-            ..add(HistoryInitialLoad()),
+      create: (context) {
+        final bloc = HistoryBloc(
+          getHistoryUseCase: GetHistoryUseCase(historyRepo),
+        );
 
-      // 2. Listener to Sync with Global DevicesBloc
+        // --- FIX START ---
+        // Check the Global Device State IMMEDIATELY upon creation
+        final deviceState = context.read<DevicesBloc>().state;
+
+        if (deviceState is DevicesLoaded &&
+            deviceState.selectedDeviceId != null) {
+          // If we already have a device, fetch data immediately
+          bloc.add(HistoryDeviceChanged(deviceState.selectedDeviceId!));
+        } else {
+          // Otherwise, wait (Initial Load)
+          bloc.add(HistoryInitialLoad());
+        }
+        // --- FIX END ---
+
+        return bloc;
+      },
+
+      // Keep the Listener to handle FUTURE changes (User clicks a new device)
       child: BlocListener<DevicesBloc, DevicesState>(
         listener: (context, state) {
           if (state is DevicesLoaded && state.selectedDeviceId != null) {
-            // When device selection changes globally, update History
             context.read<HistoryBloc>().add(
               HistoryDeviceChanged(state.selectedDeviceId!),
             );

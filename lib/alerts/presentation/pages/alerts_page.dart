@@ -31,11 +31,24 @@ class AlertsPage extends StatelessWidget {
     );
 
     return BlocProvider(
-      create: (_) =>
-          AlertsBloc(getAlertsUseCase: GetAlertsUseCase(alertsRepo))
-            ..add(AlertsInitialLoad()),
+      create: (context) {
+        final bloc = AlertsBloc(getAlertsUseCase: GetAlertsUseCase(alertsRepo));
 
-      // 2. Listener to Sync with Global DevicesBloc
+        // --- FIX START ---
+        // Check Global Device State immediately
+        final deviceState = context.read<DevicesBloc>().state;
+
+        if (deviceState is DevicesLoaded &&
+            deviceState.selectedDeviceId != null) {
+          bloc.add(AlertsDeviceChanged(deviceState.selectedDeviceId!));
+        } else {
+          bloc.add(AlertsInitialLoad());
+        }
+        // --- FIX END ---
+
+        return bloc;
+      },
+
       child: BlocListener<DevicesBloc, DevicesState>(
         listener: (context, state) {
           if (state is DevicesLoaded && state.selectedDeviceId != null) {

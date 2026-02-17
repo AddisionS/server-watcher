@@ -11,8 +11,6 @@ class HomeError extends HomeState {
 }
 
 class HomeLoaded extends HomeState {
-  // REMOVED: final List<String> rooms;
-
   final String selectedDeviceId; // RENAMED
   final List<SensorData> sensorData;
   final ThresholdsEntity thresholds;
