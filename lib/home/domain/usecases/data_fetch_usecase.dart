@@ -6,8 +6,7 @@ class GetSensorStreamUseCase {
 
   GetSensorStreamUseCase(this.repository);
 
-  // Note: This returns a Stream, not a Future!
-  Stream<SensorData> call(String room) {
-    return repository.getSensorStream(room);
+  Stream<SensorData> call(String deviceId) {
+    return repository.getSensorStream(deviceId);
   }
 }

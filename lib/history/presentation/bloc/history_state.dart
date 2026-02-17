@@ -1,6 +1,5 @@
-import '../../../../home/domain/entities/sensor_data_entity.dart';
+import '../../../home/domain/entities/sensor_data_entity.dart';
 
-// Holds historyData
 abstract class HistoryState {}
 
 class HistoryLoading extends HistoryState {}
@@ -11,25 +10,18 @@ class HistoryError extends HistoryState {
 }
 
 class HistoryLoaded extends HistoryState {
-  final List<String> rooms; // For the Dropdown
-  final String selectedRoom; // Currently selected
-  final List<SensorData> historyData; // The 24h Log
+  // REMOVED: final List<String> rooms;
+  final String selectedDeviceId; // RENAMED
+  final List<SensorData> historyData;
 
-  HistoryLoaded({
-    required this.rooms,
-    required this.selectedRoom,
-    required this.historyData,
-  });
+  HistoryLoaded({required this.selectedDeviceId, required this.historyData});
 
-  // CopyWith pattern for easy updates
   HistoryLoaded copyWith({
-    List<String>? rooms,
-    String? selectedRoom,
+    String? selectedDeviceId,
     List<SensorData>? historyData,
   }) {
     return HistoryLoaded(
-      rooms: rooms ?? this.rooms,
-      selectedRoom: selectedRoom ?? this.selectedRoom,
+      selectedDeviceId: selectedDeviceId ?? this.selectedDeviceId,
       historyData: historyData ?? this.historyData,
     );
   }

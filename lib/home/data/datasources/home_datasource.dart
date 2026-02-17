@@ -1,42 +1,59 @@
+import 'dart:convert';
 import 'dart:async';
-import 'dart:math';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/sensor_model.dart';
 
 abstract class HomeRemoteDataSource {
-  Future<List<String>> fetchRooms();
-  Stream<SensorModel> getSensorStream(String room);
+  // We removed fetchRooms() as you requested
+  Stream<SensorModel> getSensorStream(String deviceId);
 }
 
-class HomeMockDataSourceImpl implements HomeRemoteDataSource {
-  @override
-  Future<List<String>> fetchRooms() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    return [
-      'AB1 room 001',
-      'Administrative Block',
-      'AB2 room 002',
-      'AB3 room 003',
-    ];
+class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
+  final http.Client client;
+  final SharedPreferences sharedPreferences;
+
+  // Use 10.0.2.2 for Android Emulator, localhost for Web
+  final String baseUrl = "http://localhost:8000";
+
+  HomeRemoteDataSourceImpl({
+    required this.client,
+    required this.sharedPreferences,
+  });
+
+  Map<String, String> _getHeaders() {
+    final token = sharedPreferences.getString('auth_token') ?? '';
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
   }
 
   @override
-  Stream<SensorModel> getSensorStream(String room) {
-    // This creates a stream that "ticks" every 2 seconds
-    return Stream.periodic(const Duration(seconds: 2), (_) {
-      final random = Random();
+  Stream<SensorModel> getSensorStream(String deviceId) async* {
+    // Continuous Polling Loop
+    while (true) {
+      try {
+        final url = Uri.parse('$baseUrl/metrics/latest/$deviceId');
 
-      // Simulate different data based on room
-      // Server Room is hotter!
-      double baseTemp = room == 'Server Room' ? 25.0 : 20.0;
+        final response = await client.get(url, headers: _getHeaders());
 
-      return SensorModel(
-        timestamp: DateTime.now(),
-        // Random temp between baseTemp and baseTemp + 5
-        temperature: baseTemp + random.nextDouble() * 5,
-        // Random humidity between 40% and 60%
-        humidity: 40.0 + random.nextDouble() * 20,
-      );
-    });
+        if (response.statusCode == 200) {
+          final jsonMap = json.decode(response.body);
+          final data = SensorModel.fromJson(jsonMap);
+          print("Received Sensor Data: $data");
+          yield data;
+        } else {
+          // Optional: Log error or yield a specific error state
+          // For now, we just ignore failed ticks to keep the stream alive
+          print("Polling Error: ${response.statusCode}");
+        }
+      } catch (e) {
+        print("Network Error during polling: $e");
+      }
+
+      // Wait 2 seconds before asking again
+      await Future.delayed(const Duration(seconds: 2));
+    }
   }
 }

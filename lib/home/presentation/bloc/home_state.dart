@@ -11,28 +11,25 @@ class HomeError extends HomeState {
 }
 
 class HomeLoaded extends HomeState {
-  final List<String> rooms; //
-  final String selectedRoom; //
-  final List<SensorData> sensorData; // [Point1, Point2, Point3...]
+  // REMOVED: final List<String> rooms;
+
+  final String selectedDeviceId; // RENAMED
+  final List<SensorData> sensorData;
   final ThresholdsEntity thresholds;
 
   HomeLoaded({
-    required this.rooms,
-    required this.selectedRoom,
+    required this.selectedDeviceId,
     required this.sensorData,
     required this.thresholds,
   });
 
-  // Helper to update specific fields easily
   HomeLoaded copyWith({
-    List<String>? rooms,
-    String? selectedRoom,
+    String? selectedDeviceId,
     List<SensorData>? sensorData,
     ThresholdsEntity? thresholds,
   }) {
     return HomeLoaded(
-      rooms: rooms ?? this.rooms,
-      selectedRoom: selectedRoom ?? this.selectedRoom,
+      selectedDeviceId: selectedDeviceId ?? this.selectedDeviceId,
       sensorData: sensorData ?? this.sensorData,
       thresholds: thresholds ?? this.thresholds,
     );

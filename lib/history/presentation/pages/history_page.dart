@@ -3,9 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 // Domain & Data Imports
 import '../../../../auth/domain/entities/user_entity.dart';
-import '../../../home/data/datasources/home_datasource.dart';
-import '../../../home/data/repositories/home_repository_impl.dart';
-import '../../../home/domain/usecases/room_fetch_usecase.dart';
 import '../../data/datasources/history_mock_data_source.dart';
 import '../../data/repositories/history_repository_impl.dart';
 import '../../domain/usecases/get_history_usecase.dart';
@@ -17,6 +14,11 @@ import '../bloc/history_state.dart';
 import '../../../../home/presentation/widgets/sensor_chart.dart';
 import '../../../../home/presentation/widgets/main_layout.dart';
 
+// Device Feature Imports
+import '../../../../devices/presentation/bloc/devices_bloc.dart';
+import '../../../../devices/presentation/bloc/devices_state.dart';
+import '../../../../devices/presentation/widgets/device_horizontal_list.dart';
+
 class HistoryPage extends StatelessWidget {
   final UserEntity user;
 
@@ -24,26 +26,32 @@ class HistoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Dependency Injection
-    final homeDataSource = HomeMockDataSourceImpl();
-    final homeRepo = HomeRepositoryImpl(remoteDataSource: homeDataSource);
-
+    // 1. Dependency Injection (Only History needed now)
     final historyDataSource = HistoryMockDataSourceImpl();
     final historyRepo = HistoryRepositoryImpl(
       remoteDataSource: historyDataSource,
     );
 
     return BlocProvider(
-      create: (_) => HistoryBloc(
-        getRoomsUseCase: GetRoomsUseCase(homeRepo),
-        getHistoryUseCase: GetHistoryUseCase(historyRepo),
-      )..add(HistoryInitialLoad()),
+      create: (_) =>
+          HistoryBloc(getHistoryUseCase: GetHistoryUseCase(historyRepo))
+            ..add(HistoryInitialLoad()),
 
-      // 2. USE MAIN LAYOUT
-      child: MainLayout(
-        user: user,
-        title: "24h Log",
-        body: const _HistoryContent(),
+      // 2. Listener to Sync with Global DevicesBloc
+      child: BlocListener<DevicesBloc, DevicesState>(
+        listener: (context, state) {
+          if (state is DevicesLoaded && state.selectedDeviceId != null) {
+            // When device selection changes globally, update History
+            context.read<HistoryBloc>().add(
+              HistoryDeviceChanged(state.selectedDeviceId!),
+            );
+          }
+        },
+        child: MainLayout(
+          user: user,
+          title: "24h Log",
+          body: const _HistoryContent(),
+        ),
       ),
     );
   }
@@ -54,66 +62,33 @@ class _HistoryContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate responsiveness locally
     final isDesktop = MediaQuery.of(context).size.width >= 800;
 
     return BlocBuilder<HistoryBloc, HistoryState>(
       builder: (context, state) {
+        // Handle Loading/Error
         if (state is HistoryLoading) {
           return const Center(child: CircularProgressIndicator());
         }
         if (state is HistoryError) return Center(child: Text(state.message));
 
         if (state is HistoryLoaded) {
-          // TRICK: Reverse the list for the Graph so time flows Left -> Right
           final graphData = state.historyData.reversed.toList();
 
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- 1. Dropdown ---
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Text(
-                      "Select Room:",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(width: 16),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: isDesktop ? 300 : 200,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Theme.of(context).dividerColor,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: state.selectedRoom,
-                            isExpanded: true,
-                            items: state.rooms
-                                .map(
-                                  (r) => DropdownMenuItem(
-                                    value: r,
-                                    child: Text(r),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (v) => context.read<HistoryBloc>().add(
-                              HistoryRoomChanged(v!),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+              // --- 1. NEW DEVICE LIST ---
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  "Select Device",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
+              const DeviceHorizontalList(isHomePage: false),
+
+              const SizedBox(height: 20),
 
               // --- 2. THE GRAPHS ---
               AspectRatio(
@@ -175,7 +150,7 @@ class _HistoryContent extends StatelessWidget {
 
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: Colors.white10, // Dark mode friendly
+                        backgroundColor: Colors.white10,
                         child: const Icon(
                           Icons.access_time,
                           size: 20,
@@ -193,7 +168,8 @@ class _HistoryContent extends StatelessWidget {
             ],
           );
         }
-        return const SizedBox();
+        // Initial State (Waiting for selection)
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }

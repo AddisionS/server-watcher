@@ -4,12 +4,11 @@ abstract class HomeEvent {}
 
 class HomeInitialLoad extends HomeEvent {}
 
-class HomeRoomChanged extends HomeEvent {
-  final String room;
-  HomeRoomChanged(this.room);
+class HomeDeviceChanged extends HomeEvent {
+  final String deviceId;
+  HomeDeviceChanged(this.deviceId);
 }
 
-// This event is triggered internally by the BLoC when the stream gives data
 class HomeDataUpdated extends HomeEvent {
   final SensorData data;
   HomeDataUpdated(this.data);

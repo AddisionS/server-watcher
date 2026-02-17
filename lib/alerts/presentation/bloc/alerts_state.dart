@@ -10,24 +10,15 @@ class AlertsError extends AlertsState {
 }
 
 class AlertsLoaded extends AlertsState {
-  final List<String> rooms;
-  final String selectedRoom;
+  // REMOVED: rooms
+  final String selectedDeviceId; // RENAMED
   final List<AlertEntity> alerts;
 
-  AlertsLoaded({
-    required this.rooms,
-    required this.selectedRoom,
-    required this.alerts,
-  });
+  AlertsLoaded({required this.selectedDeviceId, required this.alerts});
 
-  AlertsLoaded copyWith({
-    List<String>? rooms,
-    String? selectedRoom,
-    List<AlertEntity>? alerts,
-  }) {
+  AlertsLoaded copyWith({String? selectedDeviceId, List<AlertEntity>? alerts}) {
     return AlertsLoaded(
-      rooms: rooms ?? this.rooms,
-      selectedRoom: selectedRoom ?? this.selectedRoom,
+      selectedDeviceId: selectedDeviceId ?? this.selectedDeviceId,
       alerts: alerts ?? this.alerts,
     );
   }

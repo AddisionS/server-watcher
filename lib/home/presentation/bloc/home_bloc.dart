@@ -16,17 +16,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     required this.getSensorStreamUseCase,
     required this.getThresholdsUseCase,
   }) : super(HomeLoading()) {
-    // 1. Initial Load: Now only fetches Thresholds.
-    // It stays in Loading state until a room is actually changed/selected.
+    // 1. Initial Load
     on<HomeInitialLoad>((event, emit) async {
       try {
         final thresholds = await getThresholdsUseCase.call();
-        // We emit a temporary Loaded state with no room selected yet
-        // The UI/DevicesBloc will trigger the first RoomChange immediately
+        // Emit loaded with empty ID.
+        // The UI (BlocListener in HomePage) will trigger the first device selection.
         emit(
           HomeLoaded(
-            rooms: [], // This will be ignored as DevicesBloc handles the list
-            selectedRoom: "",
+            selectedDeviceId: "",
             sensorData: [],
             thresholds: thresholds,
           ),
@@ -36,34 +34,42 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       }
     });
 
-    on<HomeRoomChanged>((event, emit) {
+    // 2. Device Changed (UPDATED)
+    on<HomeDeviceChanged>((event, emit) {
       if (state is HomeLoaded) {
         final currentState = state as HomeLoaded;
-        subscribeToRoom(event.room);
+
+        // Start polling the new Device ID
+        subscribeToDevice(event.deviceId);
+
         emit(
           currentState.copyWith(
-            selectedRoom: event.room,
-            sensorData: [], // Clear graph for new room
+            selectedDeviceId: event.deviceId,
+            sensorData: [], // Clear graph for new device
           ),
         );
       }
     });
 
+    // 3. Data Arrived
     on<HomeDataUpdated>((event, emit) {
       if (state is HomeLoaded) {
         final currentState = state as HomeLoaded;
         final updatedList = List<SensorData>.from(currentState.sensorData)
           ..add(event.data);
+
         if (updatedList.length > 20) updatedList.removeAt(0);
+
         emit(currentState.copyWith(sensorData: updatedList));
       }
     });
   }
 
-  void subscribeToRoom(String room) {
+  // Renamed helper function
+  void subscribeToDevice(String deviceId) {
     sensorSubscription?.cancel();
     sensorSubscription = getSensorStreamUseCase
-        .call(room)
+        .call(deviceId)
         .listen((data) => add(HomeDataUpdated(data)));
   }
 

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-// Imports ...
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+// Domain & Data Imports
 import '../../../../auth/domain/entities/user_entity.dart';
 import '../../domain/usecases/data_fetch_usecase.dart';
 import '../../data/datasources/home_datasource.dart';
@@ -9,14 +10,20 @@ import '../../data/repositories/home_repository_impl.dart';
 import '../../../config/data/datasources/config_mock_data_source.dart';
 import '../../../config/data/repositories/config_repository_impl.dart';
 import '../../../config/domain/usecases/get_thresholds_usecase.dart';
+
+// Export Feature Imports
 import '../../../export/data/datasources/export_mock_data_source.dart';
 import '../../../export/data/repositories/export_repository_impl.dart';
 import '../../../export/domain/usecases/download_report_usecase.dart';
 import '../../../export/presentation/bloc/export_bloc.dart';
 import '../../../export/presentation/widgets/export_section.dart';
+
+// Devices Feature Imports
 import '../../../../devices/presentation/widgets/device_horizontal_list.dart';
 import '../../../../devices/presentation/bloc/devices_bloc.dart';
 import '../../../../devices/presentation/bloc/devices_state.dart';
+
+// Home Widgets & Bloc
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
@@ -26,17 +33,24 @@ import '../widgets/main_layout.dart';
 
 class HomePage extends StatelessWidget {
   final UserEntity user;
+
   const HomePage({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
-    // Dependency Injection
+    final httpClient = context.read<http.Client>();
+    final sharedPrefs = context.read<SharedPreferences>();
     final homeRepo = HomeRepositoryImpl(
-      remoteDataSource: HomeMockDataSourceImpl(),
+      remoteDataSource: HomeRemoteDataSourceImpl(
+        client: httpClient,
+        sharedPreferences: sharedPrefs,
+      ),
     );
+
     final configRepo = ConfigRepositoryImpl(
       remoteDataSource: ConfigMockDataSourceImpl(),
     );
+
     final exportRepo = ExportRepositoryImpl(ExportMockDataSourceImpl());
 
     return MultiBlocProvider(
@@ -52,14 +66,12 @@ class HomePage extends StatelessWidget {
         ),
       ],
       child: BlocListener<DevicesBloc, DevicesState>(
-        // OPTIMIZATION: When Devices are loaded for the first time,
-        // automatically select the first device to start the Home stream.
         listenWhen: (prev, curr) =>
-            prev is DevicesLoading && curr is DevicesLoaded,
+            curr is DevicesLoaded && curr.devices.isNotEmpty,
         listener: (context, state) {
           if (state is DevicesLoaded && state.devices.isNotEmpty) {
-            final firstRoom = state.devices.first.roomName;
-            context.read<HomeBloc>().add(HomeRoomChanged(firstRoom));
+            final firstDeviceId = state.devices.first.id;
+            context.read<HomeBloc>().add(HomeDeviceChanged(firstDeviceId));
           }
         },
         child: MainLayout(
@@ -87,19 +99,21 @@ class HomeContent extends StatelessWidget {
         if (state is HomeError) return Center(child: Text(state.message));
 
         if (state is HomeLoaded) {
+          // Safety Check
           final double latestTemp = state.sensorData.isNotEmpty
               ? state.sensorData.last.temperature
               : 0.0;
           final double latestHum = state.sensorData.isNotEmpty
               ? state.sensorData.last.humidity
               : 0.0;
+          final thresholds = state.thresholds;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- 1. REPLACED DROPDOWN WITH DEVICE LIST ---
+                // --- 1. DEVICE LIST ---
                 const Text(
                   "Select Device",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -127,16 +141,16 @@ class HomeContent extends StatelessWidget {
                         value: double.parse(latestTemp.toStringAsFixed(1)),
                         unit: "°C",
                         axisMax: 50,
-                        subThreshold: state.thresholds.subTemp,
-                        threshold: state.thresholds.thresTemp,
+                        subThreshold: thresholds.subTemp,
+                        threshold: thresholds.thresTemp,
                       ),
                       SensorGauge(
                         title: "Humidity",
                         value: double.parse(latestHum.toStringAsFixed(1)),
                         unit: "%",
                         axisMax: 100,
-                        subThreshold: state.thresholds.subHum,
-                        threshold: state.thresholds.thresHum,
+                        subThreshold: thresholds.subHum,
+                        threshold: thresholds.thresHum,
                       ),
                     ],
                   ),
@@ -152,7 +166,7 @@ class HomeContent extends StatelessWidget {
                       children: [
                         Expanded(
                           child: SensorChart(
-                            title: "Temperature",
+                            title: "Temperature History",
                             data: state.sensorData,
                             isTemperature: true,
                             lineColor: Colors.red,
@@ -161,7 +175,7 @@ class HomeContent extends StatelessWidget {
                         const SizedBox(width: 24),
                         Expanded(
                           child: SensorChart(
-                            title: "Humidity",
+                            title: "Humidity History",
                             data: state.sensorData,
                             isTemperature: false,
                             lineColor: Colors.blue,
@@ -196,7 +210,11 @@ class HomeContent extends StatelessWidget {
                   ),
 
                 const SizedBox(height: 30),
-                ExportSection(currentRoom: state.selectedRoom),
+
+                // --- 4. EXPORT SECTION ---
+                // FIX: Pass selectedDeviceId instead of selectedRoom
+                ExportSection(currentRoom: state.selectedDeviceId),
+
                 const SizedBox(height: 40),
               ],
             ),

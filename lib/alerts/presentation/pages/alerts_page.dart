@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../auth/domain/entities/user_entity.dart';
+
 // Data Injection Imports
-import '../../../home/data/datasources/home_datasource.dart';
-import '../../../../home/data/repositories/home_repository_impl.dart';
-import '../../../home/domain/usecases/room_fetch_usecase.dart';
 import '../../data/datasources/alerts_mock_data_source.dart';
 import '../../data/repositories/alerts_repository_impl.dart';
 import '../../domain/usecases/get_alerts_usecase.dart';
+
 // Bloc Imports
 import '../bloc/alerts_bloc.dart';
 import '../bloc/alerts_event.dart';
 import '../bloc/alerts_state.dart';
-// Layout Import
+
+// Layout & Widget Imports
 import '../../../../home/presentation/widgets/main_layout.dart';
+import '../../../../devices/presentation/bloc/devices_bloc.dart';
+import '../../../../devices/presentation/bloc/devices_state.dart';
+import '../../../../devices/presentation/widgets/device_horizontal_list.dart';
 
 class AlertsPage extends StatelessWidget {
   final UserEntity user;
@@ -23,24 +26,29 @@ class AlertsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 1. Dependency Injection
-    final homeRepo = HomeRepositoryImpl(
-      remoteDataSource: HomeMockDataSourceImpl(),
-    );
     final alertsRepo = AlertsRepositoryImpl(
       remoteDataSource: AlertsMockDataSourceImpl(),
     );
 
     return BlocProvider(
-      create: (_) => AlertsBloc(
-        getRoomsUseCase: GetRoomsUseCase(homeRepo),
-        getAlertsUseCase: GetAlertsUseCase(alertsRepo),
-      )..add(AlertsInitialLoad()),
+      create: (_) =>
+          AlertsBloc(getAlertsUseCase: GetAlertsUseCase(alertsRepo))
+            ..add(AlertsInitialLoad()),
 
-      // 2. USE MAIN LAYOUT
-      child: MainLayout(
-        user: user,
-        title: "System Alerts",
-        body: const _AlertsContent(),
+      // 2. Listener to Sync with Global DevicesBloc
+      child: BlocListener<DevicesBloc, DevicesState>(
+        listener: (context, state) {
+          if (state is DevicesLoaded && state.selectedDeviceId != null) {
+            context.read<AlertsBloc>().add(
+              AlertsDeviceChanged(state.selectedDeviceId!),
+            );
+          }
+        },
+        child: MainLayout(
+          user: user,
+          title: "System Alerts",
+          body: const _AlertsContent(),
+        ),
       ),
     );
   }
@@ -51,9 +59,6 @@ class _AlertsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate responsiveness locally
-    final isDesktop = MediaQuery.of(context).size.width >= 800;
-
     return BlocBuilder<AlertsBloc, AlertsState>(
       builder: (context, state) {
         if (state is AlertsLoading) {
@@ -63,52 +68,17 @@ class _AlertsContent extends StatelessWidget {
 
         if (state is AlertsLoaded) {
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Dropdown Section
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Text(
-                      "Select Room:",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(width: 16),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: isDesktop ? 300 : 200,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            // FIX 1: Updated opacity method
-                            color: Colors.grey.withValues(alpha: 0.5),
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: state.selectedRoom,
-                            isExpanded: true,
-                            items: state.rooms
-                                .map(
-                                  (r) => DropdownMenuItem(
-                                    value: r,
-                                    child: Text(r),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (v) => context.read<AlertsBloc>().add(
-                              AlertsRoomChanged(v!),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+              // 1. Device List
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  "Select Device",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
               ),
+              const DeviceHorizontalList(isHomePage: false),
 
               const Divider(),
 
@@ -124,11 +94,9 @@ class _AlertsContent extends StatelessWidget {
                         "${alert.timestamp.year}-${alert.timestamp.month}-${alert.timestamp.day} ${alert.timestamp.hour.toString().padLeft(2, '0')}:${alert.timestamp.minute.toString().padLeft(2, '0')}";
 
                     return Card(
-                      // FIX 2: Updated opacity method
                       color: Colors.red.withValues(alpha: 0.1),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        // FIX 3: Updated opacity method
                         side: BorderSide(
                           color: Colors.red.withValues(alpha: 0.5),
                         ),
@@ -161,7 +129,7 @@ class _AlertsContent extends StatelessWidget {
             ],
           );
         }
-        return const SizedBox();
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }

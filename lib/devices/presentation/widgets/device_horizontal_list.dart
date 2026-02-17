@@ -89,7 +89,7 @@ class _DeviceHorizontalListState extends State<DeviceHorizontalList> {
                         );
                         if (widget.isHomePage) {
                           context.read<HomeBloc>().add(
-                            HomeRoomChanged(device.roomName),
+                            HomeDeviceChanged(device.id),
                           );
                         }
                       },

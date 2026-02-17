@@ -50,6 +50,15 @@ class MyApp extends StatelessWidget {
 
     return MultiRepositoryProvider(
       providers: [
+        // --- INJECT HTTP CLIENT ---
+        RepositoryProvider<http.Client>(create: (context) => httpClient),
+
+        // --- INJECT SHARED PREFERENCES ---
+        RepositoryProvider<SharedPreferences>(
+          create: (context) => sharedPreferences,
+        ),
+
+        // --- INJECT DEVICES REPOSITORY ---
         RepositoryProvider<DevicesRepositoryImpl>(
           create: (_) => DevicesRepositoryImpl(
             DevicesRemoteDataSourceImpl(
