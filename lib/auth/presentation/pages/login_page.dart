@@ -39,19 +39,19 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      // NEW: Add a light background color (looks good on Web)
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Center(
-            // --- NEW: THE CONSTRAINT ---
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 450,
-              ), // Max width for Web
+              constraints: const BoxConstraints(maxWidth: 450),
               // Adds a nice shadow and white background behind the form
               child: Card(
+                color: theme
+                    .colorScheme
+                    .surface, // Use surface color for the card background
                 elevation: 8, // float effect
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -115,6 +115,7 @@ class _LoginPageState extends State<LoginPage> {
                             const Text(
                               "Welcome Back",
                               style: TextStyle(
+                                color: Colors.white,
                                 fontSize: 36,
                                 fontWeight: FontWeight.bold,
                               ),

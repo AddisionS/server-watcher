@@ -96,16 +96,15 @@ class HomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isWideScreen = MediaQuery.of(context).size.width >= 1000;
+    final theme = Theme.of(context); // Get theme
 
     return BlocBuilder<HomeBloc, HomeState>(
       builder: (context, state) {
-        if (state is HomeLoading) {
+        if (state is HomeLoading)
           return const Center(child: CircularProgressIndicator());
-        }
         if (state is HomeError) return Center(child: Text(state.message));
 
         if (state is HomeLoaded) {
-          // Safety Check
           final double latestTemp = state.sensorData.isNotEmpty
               ? state.sensorData.last.temperature
               : 0.0;
@@ -119,46 +118,39 @@ class HomeContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- 1. DEVICE LIST ---
                 const Text(
                   "Select Device",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 const DeviceHorizontalList(isHomePage: true),
+                const SizedBox(height: 20),
 
-                const SizedBox(height: 30),
-
-                // --- 2. GAUGES ---
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    color: Colors.white.withValues(alpha: 0.05),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
+                // --- 2. GAUGES SECTION (Wrapped in Card) ---
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        SensorGauge(
+                          title: "Temperature",
+                          value: double.parse(latestTemp.toStringAsFixed(1)),
+                          unit: "°C",
+                          axisMax: 50,
+                          subThreshold: thresholds.subTemp,
+                          threshold: thresholds.thresTemp,
+                        ),
+                        SensorGauge(
+                          title: "Humidity",
+                          value: double.parse(latestHum.toStringAsFixed(1)),
+                          unit: "%",
+                          axisMax: 100,
+                          subThreshold: thresholds.subHum,
+                          threshold: thresholds.thresHum,
+                        ),
+                      ],
                     ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      SensorGauge(
-                        title: "Temperature",
-                        value: double.parse(latestTemp.toStringAsFixed(1)),
-                        unit: "°C",
-                        axisMax: 50,
-                        subThreshold: thresholds.subTemp,
-                        threshold: thresholds.thresTemp,
-                      ),
-                      SensorGauge(
-                        title: "Humidity",
-                        value: double.parse(latestHum.toStringAsFixed(1)),
-                        unit: "%",
-                        axisMax: 100,
-                        subThreshold: thresholds.subHum,
-                        threshold: thresholds.thresHum,
-                      ),
-                    ],
                   ),
                 ),
 
@@ -172,19 +164,19 @@ class HomeContent extends StatelessWidget {
                       children: [
                         Expanded(
                           child: SensorChart(
-                            title: "Temperature History",
+                            title: "Temperature",
                             data: state.sensorData,
                             isTemperature: true,
-                            lineColor: Colors.red,
+                            lineColor: theme.colorScheme.error, // Theme Red
                           ),
                         ),
                         const SizedBox(width: 24),
                         Expanded(
                           child: SensorChart(
-                            title: "Humidity History",
+                            title: "Humidity",
                             data: state.sensorData,
                             isTemperature: false,
-                            lineColor: Colors.blue,
+                            lineColor: theme.colorScheme.primary, // Theme Green
                           ),
                         ),
                       ],
@@ -199,7 +191,7 @@ class HomeContent extends StatelessWidget {
                           title: "Temperature",
                           data: state.sensorData,
                           isTemperature: true,
-                          lineColor: Colors.red,
+                          lineColor: theme.colorScheme.error,
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -209,18 +201,14 @@ class HomeContent extends StatelessWidget {
                           title: "Humidity",
                           data: state.sensorData,
                           isTemperature: false,
-                          lineColor: Colors.blue,
+                          lineColor: theme.colorScheme.primary,
                         ),
                       ),
                     ],
                   ),
 
                 const SizedBox(height: 30),
-
-                // --- 4. EXPORT SECTION ---
-                // FIX: Pass selectedDeviceId instead of selectedRoom
                 ExportSection(currentRoom: state.selectedDeviceId),
-
                 const SizedBox(height: 40),
               ],
             ),

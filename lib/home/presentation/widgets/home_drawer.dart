@@ -1,133 +1,189 @@
 import 'package:flutter/material.dart';
-import '/home/presentation/pages/home_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../auth/domain/entities/user_entity.dart';
 import '../../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../auth/presentation/bloc/auth_event.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../auth/presentation/pages/login_page.dart';
-import '../../../history/presentation/pages/history_page.dart'; // Import History Page
-import '../../../config/presentation/pages/config_page.dart'; // Import config page
+import '../../presentation/pages/home_page.dart';
+import '../../../config/presentation/pages/config_page.dart';
+import '../../../history/presentation/pages/history_page.dart';
 import '../../../alerts/presentation/pages/alerts_page.dart';
-import 'package:intl/intl.dart' show toBeginningOfSentenceCase;
-// Imports
 import '../../../devices/presentation/pages/device_manager_page.dart';
-// ... Data source imports for injection ...
 
 class HomeDrawer extends StatelessWidget {
   final UserEntity user;
+  final String activePage; // Used to highlight the current menu item
 
-  const HomeDrawer({super.key, required this.user});
+  const HomeDrawer({
+    super.key,
+    required this.user,
+    this.activePage = "Dashboard",
+  });
 
   @override
   Widget build(BuildContext context) {
-    final bool isDesktop = MediaQuery.of(context).size.width >= 800;
+    final theme = Theme.of(context);
+
     return Drawer(
-      shape: isDesktop
-          ? const RoundedRectangleBorder(borderRadius: BorderRadius.zero)
-          : null,
+      backgroundColor: theme
+          .colorScheme
+          .surface, // Use surface color for the drawer background
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          UserAccountsDrawerHeader(
-            accountName: Text(
-              toBeginningOfSentenceCase(user.username),
-
-              style: const TextStyle(fontSize: 26, color: Colors.white),
-            ),
-            accountEmail: null,
-            decoration: BoxDecoration(
-              color: user.role == 'ADMIN'
-                  ? Colors.redAccent
-                  : Colors.blueAccent,
+          // --- 1. SLEEK TYPOGRAPHY HEADER ---
+          Padding(
+            padding: const EdgeInsets.only(top: 40, left: 24, bottom: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontSize: 24,
+                      letterSpacing: 0.5,
+                    ),
+                    children: [
+                      const TextSpan(text: 'Server '),
+                      TextSpan(
+                        text: 'Watcher',
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                        ), // Neon Green
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Logged in as ${user.username}",
+                  style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12),
+                ),
+              ],
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.dashboard),
-            title: const Text("Dashboard"),
-            onTap: () {
-              if (!isDesktop) Navigator.pop(context);
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => HomePage(user: user)),
-                (route) => false,
-              );
-            },
+
+          // --- 2. MENU LABEL ---
+          Padding(
+            padding: const EdgeInsets.only(left: 24, bottom: 12),
+            child: Text(
+              "MENU",
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: 11,
+                letterSpacing: 1.5,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
 
-          // LOGIC: Only show for Admin
-          if (user.role == 'ADMIN')
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text("Configuration"),
+          // --- 3. MENU ITEMS ---
+          _buildMenuItem(
+            context: context,
+            title: "Dashboard",
+            icon: Icons.dashboard_outlined,
+            isActive: activePage == "Dashboard",
+            onTap: () => _navigate(context, HomePage(user: user)),
+          ),
+
+          if (user.role == 'ADMIN') ...[
+            _buildMenuItem(
+              context: context,
+              title: "Configuration",
+              icon: Icons.settings_outlined,
+              isActive: activePage == "System Configuration",
+              onTap: () => _navigate(context, ConfigPage(user: user)),
+            ),
+            _buildMenuItem(
+              context: context,
+              title: "Device Manager",
+              icon: Icons.devices_outlined,
+              isActive: activePage == "Device Manager",
+              onTap: () => _navigate(context, DeviceManagerPage(user: user)),
+            ),
+          ],
+
+          _buildMenuItem(
+            context: context,
+            title: "24h Log",
+            icon: Icons.history_outlined,
+            isActive: activePage == "24h Log",
+            onTap: () => _navigate(context, HistoryPage(user: user)),
+          ),
+
+          _buildMenuItem(
+            context: context,
+            title: "Alert Logs",
+            icon: Icons.warning_amber_outlined,
+            isActive: activePage == "System Alerts",
+            onTap: () => _navigate(context, AlertsPage(user: user)),
+          ),
+
+          const Spacer(),
+          const Divider(),
+
+          // --- 4. LOGOUT ---
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+              leading: Icon(Icons.logout, color: theme.colorScheme.error),
+              title: Text(
+                "Logout",
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
               onTap: () {
-                if (!isDesktop) Navigator.pop(context);
+                context.read<AuthBloc>().add(AuthLogoutRequested());
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (_) => ConfigPage(user: user)),
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
                   (route) => false,
                 );
               },
             ),
-          ListTile(
-            leading: const Icon(Icons.history),
-            title: const Text("24h Log"),
-            onTap: () {
-              if (!isDesktop) Navigator.pop(context);
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => HistoryPage(user: user)),
-                (route) => false,
-              );
-            },
           ),
-          ListTile(
-            leading: const Icon(Icons.warning, color: Colors.orange),
-            title: const Text("Alert Logs"),
-            onTap: () {
-              if (!isDesktop) Navigator.pop(context);
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => AlertsPage(user: user)),
-                (route) => false,
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.devices),
-            title: const Text("Device Manager"),
-            onTap: () {
-              // 1. DO NOT create a Repository here.
-              // 2. DO NOT create a BlocProvider here.
-
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  // 3. Just return the Page.
-                  // It will look up the widget tree and find the Bloc in Main.dart
-                  builder: (_) => DeviceManagerPage(user: user),
-                ),
-                (route) => false,
-              );
-            },
-          ),
-          const Spacer(), // Pushes logout to bottom
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text("Logout"),
-            onTap: () {
-              // Trigger BLoC Logout
-              context.read<AuthBloc>().add(AuthLogoutRequested());
-
-              // Navigate to Login
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-                (route) => false,
-              );
-            },
-          ),
-          const SizedBox(height: 20),
         ],
+      ),
+    );
+  }
+
+  void _navigate(BuildContext context, Widget page) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => page),
+      (route) => false,
+    );
+  }
+
+  Widget _buildMenuItem({
+    required BuildContext context,
+    required String title,
+    required IconData icon,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: isActive
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurfaceVariant,
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: isActive
+                ? theme.colorScheme.onSurface
+                : theme.colorScheme.onSurfaceVariant,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        selected: isActive,
+        selectedTileColor: theme.colorScheme.outline, // Highlight background
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        onTap: onTap,
       ),
     );
   }

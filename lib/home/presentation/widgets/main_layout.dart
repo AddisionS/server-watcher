@@ -16,24 +16,23 @@ class MainLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeColor = user.role == 'ADMIN'
-        ? Colors.redAccent
-        : Colors.blueAccent;
-
     // FORCE WEB LAYOUT (Sidebar + Content)
     return Scaffold(
       body: Row(
         children: [
-          // 1. Permanent Sidebar
-          SizedBox(width: 250, child: HomeDrawer(user: user)),
+          // 1. Permanent Sidebar (Passes the title to highlight the active menu item)
+          SizedBox(
+            width: 250,
+            child: HomeDrawer(user: user, activePage: title),
+          ),
 
           // 2. Main Content Area
           Expanded(
             child: Scaffold(
               appBar: AppBar(
                 title: Text(title),
-                backgroundColor: themeColor,
                 automaticallyImplyLeading: false, // No Hamburger icon
+                // Background color is automatically handled by AppTheme
               ),
               body: body,
             ),

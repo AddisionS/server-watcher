@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Import for DateFormat
+import 'package:intl/intl.dart';
 import '../../domain/entities/sensor_data_entity.dart';
 
 class SensorChart extends StatelessWidget {
@@ -19,44 +19,44 @@ class SensorChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Removed elevation and shape so it inherits the global AppTheme Card style
     return Card(
-      elevation: 4,
-      margin: const EdgeInsets.all(8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(
+          24.0,
+        ), // Increased padding for premium feel
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            Text(title, style: theme.textTheme.titleMedium),
             const SizedBox(height: 20),
             Expanded(
               child: data.isEmpty
-                  ? const Center(child: Text("Waiting for data..."))
+                  ? Center(
+                      child: Text(
+                        "Waiting for data...",
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    )
                   : LineChart(
                       LineChartData(
-                        // 1. TOOLTIP SETUP (Hover Effect)
                         lineTouchData: LineTouchData(
                           touchTooltipData: LineTouchTooltipData(
                             getTooltipColor: (touchedSpot) =>
-                                const Color.fromARGB(255, 52, 66, 74),
+                                theme.colorScheme.outline,
                             getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                               return touchedBarSpots.map((barSpot) {
-                                // Get time for this spot
                                 final index = barSpot.x.toInt();
                                 final date = data[index].timestamp;
                                 final timeStr = DateFormat(
                                   'HH:mm',
                                 ).format(date);
-
                                 return LineTooltipItem(
-                                  // Show Time AND Value
                                   "Time: $timeStr\n Val: ${barSpot.y.toStringAsFixed(1)}",
-                                  const TextStyle(
-                                    color: Colors.white,
+                                  TextStyle(
+                                    color: theme.colorScheme.onSurface,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 );
@@ -64,40 +64,53 @@ class SensorChart extends StatelessWidget {
                             },
                           ),
                         ),
-
-                        gridData: const FlGridData(show: true),
-
-                        // 2. AXIS TITLES SETUP
+                        gridData: FlGridData(
+                          show: true,
+                          drawVerticalLine: false,
+                          getDrawingHorizontalLine: (value) => FlLine(
+                            color: theme.colorScheme.outline.withValues(
+                              alpha: 0.5,
+                            ),
+                            strokeWidth: 1,
+                            dashArray: [5, 5],
+                          ),
+                        ),
                         titlesData: FlTitlesData(
                           bottomTitles: AxisTitles(
                             sideTitles: SideTitles(
                               showTitles: true,
-                              reservedSize: 30, // Space for text
-                              // Logic to prevent overcrowding labels
-                              // If we have 100 points, show label every 20 points.
-                              // If we have 10 points, show label every 2 points.
+                              reservedSize: 30,
                               interval: data.length > 5
                                   ? (data.length / 5).floorToDouble()
                                   : 1.0,
-
                               getTitlesWidget: (value, meta) {
                                 final index = value.toInt();
-                                // Safety check
                                 if (index >= 0 && index < data.length) {
                                   final date = data[index].timestamp;
-                                  // Format: "14:30"
                                   return Padding(
                                     padding: const EdgeInsets.only(top: 8.0),
                                     child: Text(
                                       DateFormat('HH:mm').format(date),
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey,
-                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(fontSize: 10),
                                     ),
                                   );
                                 }
                                 return const Text('');
+                              },
+                            ),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 40,
+                              getTitlesWidget: (value, meta) {
+                                return Text(
+                                  value.toInt().toString(),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontSize: 10,
+                                  ),
+                                );
                               },
                             ),
                           ),
@@ -108,13 +121,7 @@ class SensorChart extends StatelessWidget {
                             sideTitles: SideTitles(showTitles: false),
                           ),
                         ),
-
-                        borderData: FlBorderData(
-                          show: true,
-                          border: Border.all(
-                            color: Colors.grey.withValues(alpha: 0.5),
-                          ),
-                        ),
+                        borderData: FlBorderData(show: false),
                         minY: 0,
                         maxY: isTemperature ? 50 : 100,
                         lineBarsData: [
@@ -133,23 +140,12 @@ class SensorChart extends StatelessWidget {
                             dotData: const FlDotData(show: false),
                             belowBarData: BarAreaData(
                               show: true,
-                              color: lineColor.withValues(alpha: 0.2),
+                              color: lineColor.withValues(alpha: 0.1),
                             ),
                           ),
                         ],
                       ),
                     ),
-            ),
-
-            Center(
-              child: Text(
-                "Time",
-                style: const TextStyle(
-                  color: Colors.white38,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
             ),
           ],
         ),

@@ -1,11 +1,11 @@
 {
-    "name": "Server_Watcher",
-    "short_name": "Server_Watcher",
+    "name": "temper",
+    "short_name": "temper",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Monitor your servers with ease using Server_Watcher, a powerful tool designed to keep you informed about the status of your servers. With real-time monitoring and customizable alerts, Server_Watcher ensures that you stay ahead of any potential issues, allowing you to maintain optimal performance and reliability for your server infrastructure.",
+    "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

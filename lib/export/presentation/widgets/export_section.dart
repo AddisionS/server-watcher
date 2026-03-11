@@ -27,10 +27,16 @@ class _ExportSectionState extends State<ExportSection> {
               backgroundColor: Colors.green,
             ),
           );
+          setState(() {
+            _selectedDateRange = null;
+          });
         } else if (state is ExportFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
+          setState(() {
+            _selectedDateRange = null;
+          });
         }
       },
       builder: (context, state) {
@@ -106,7 +112,9 @@ class _ExportSectionState extends State<ExportSection> {
                           : const Icon(Icons.download),
                       label: const Text("Download CSV"),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.secondary,
                         foregroundColor: Colors.white,
                       ),
                       onPressed: (isLoading || _selectedDateRange == null)

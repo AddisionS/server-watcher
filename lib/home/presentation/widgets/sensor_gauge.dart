@@ -181,7 +181,7 @@ class SensorGauge extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Padding(
                           padding: const EdgeInsets.only(bottom: 4),
                           child: Text(
@@ -209,7 +209,7 @@ class SensorGauge extends StatelessWidget {
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 18,
-            color: Colors.white54,
+            color: Colors.white70,
           ),
         ),
       ],
