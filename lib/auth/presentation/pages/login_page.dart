@@ -65,7 +65,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   // EXISTING BLOC LOGIC STARTS HERE
                   child: BlocConsumer<AuthBloc, AuthState>(
-                    listener: (context, state) {
+                    listener: (context, state) async {
                       // ... (Keep your existing Listener logic) ...
                       if (state is AuthFailure) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -76,14 +76,42 @@ class _LoginPageState extends State<LoginPage> {
                         );
                       } else if (state is AuthSuccess) {
                         ScaffoldMessenger.of(context).clearSnackBars();
-                        // Navigate based on role... (Keep your existing navigation logic)
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                home_page.HomePage(user: state.user),
+
+                        // Optional: Show a quick snackbar so the user knows it's downloading
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Loading Dashboard..."),
+                            duration: Duration(seconds: 2),
                           ),
                         );
+
+                        try {
+                          // 2. WAIT FOR THE DOWNLOAD TO FINISH
+                          await home_page.loadLibrary();
+
+                          // 3. NAVIGATE ONLY AFTER DOWNLOAD IS DONE
+                          if (context.mounted) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    home_page.HomePage(user: state.user),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          // Fallback if the download fails (e.g., bad internet)
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Failed to load dashboard. Check connection.",
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
                       }
                     },
                     builder: (context, state) {
