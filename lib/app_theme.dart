@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // --- Exact Hex Codes from Reference UI ---
@@ -18,11 +17,10 @@ class AppTheme {
 
   static ThemeData get darkTheme {
     // Base text theme using Google Fonts (Inter is a great match for the reference)
-    final baseTextTheme = GoogleFonts.interTextTheme(
-      ThemeData.dark().textTheme,
-    );
+    final baseTextTheme = ThemeData.dark().textTheme.apply(fontFamily: 'Inter');
 
     return ThemeData(
+      fontFamily: 'Inter',
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: background,

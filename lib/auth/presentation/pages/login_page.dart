@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
-import '../../../home/presentation/pages/home_page.dart';
+import '../../../home/presentation/pages/home_page.dart' deferred as home_page;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -80,7 +80,8 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => HomePage(user: state.user),
+                            builder: (_) =>
+                                home_page.HomePage(user: state.user),
                           ),
                         );
                       }

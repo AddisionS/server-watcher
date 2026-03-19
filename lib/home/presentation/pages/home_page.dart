@@ -100,8 +100,9 @@ class HomeContent extends StatelessWidget {
 
     return BlocBuilder<HomeBloc, HomeState>(
       builder: (context, state) {
-        if (state is HomeLoading)
+        if (state is HomeLoading) {
           return const Center(child: CircularProgressIndicator());
+        }
         if (state is HomeError) return Center(child: Text(state.message));
 
         if (state is HomeLoaded) {
