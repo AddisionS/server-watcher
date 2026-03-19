@@ -33,36 +33,6 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <div id="loading" style="
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    height: 100vh;
-    background-color: #161617;
-    flex-direction: column;
-    gap: 16px;
-  ">
-    <div style="
-      width: 40px; height: 40px;
-      border: 3px solid #2A2D35;
-      border-top-color: #3B82F6;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    "></div>
-    <p style="color: #ffffff99; font-family: sans-serif; font-size: 14px;">
-      Loading Server Watcher...
-    </p>
-  </div>
-
-  <style>
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
-
-  <script>
-    window.addEventListener('flutter-first-frame', function() {
-      document.getElementById('loading').remove();
-    });
-  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -14711,7 +14711,7 @@ $S:z+65}
 A.ad8.prototype={
 $0(){var w=0,v=B.H(x.H),u=1,t=[],s=this,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,a0,a1
 var $async$$0=B.I(function(a2,a3){if(a2===1){t.push(a3)
-w=u}for(;;)switch(w){case 0:m=s.a,l=x.z,k=x.N,j="http://localhost:8000/metrics/latest/"+s.c,i=s.b,h=i.a,i=i.b.a,g=s.d,f=g.a
+w=u}for(;;)switch(w){case 0:m=s.a,l=x.z,k=x.N,j="http://dcwatcher.muj.edu.in/api/metrics/latest/"+s.c,i=s.b,h=i.a,i=i.b.a,g=s.d,f=g.a
 case 2:if(!m.a){w=3
 break}u=5
 r=B.fl(j)
@@ -15711,4 +15711,4 @@ w($,"b7r","aDy",()=>B.zq(2,52))
 w($,"b7q","aQ3",()=>C.d.kn(B.Lh($.aDy())/B.Lh(10)))
 w($,"ba2","aHv",()=>B.Lh(10))
 w($,"ba3","aRO",()=>B.Lh(10))})()};
-(a=>{a["Mvgs8PkBGS01DyXI9+FIT8WehM0="]=a.current})($__dart_deferred_initializers__);
+(a=>{a["HCjkM/aObcq3Gw+zL/pme9IDwt8="]=a.current})($__dart_deferred_initializers__);

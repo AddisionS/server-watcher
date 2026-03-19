@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../app_config.dart';
 import '../models/user_model.dart';
 
 abstract class AuthDataSource {
@@ -13,14 +14,11 @@ abstract class AuthDataSource {
 class AuthDataSourceImpl implements AuthDataSource {
   final http.Client client; // Inject HTTP Client
   final SharedPreferences sharedPreferences;
-
-  final String baseUrl = "http://127.0.0.1:8000";
-
   AuthDataSourceImpl({required this.client, required this.sharedPreferences});
 
   @override
   Future<UserModel> loginUser(String username, String password) async {
-    final url = Uri.parse('$baseUrl/login');
+    final url = Uri.parse('${AppConfig.baseUrl}/login');
 
     try {
       final response = await client.post(

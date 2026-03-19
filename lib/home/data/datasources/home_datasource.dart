@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/sensor_model.dart';
+import '../../../app_config.dart';
 
 abstract class HomeRemoteDataSource {
   // We removed fetchRooms() as you requested
@@ -12,10 +13,6 @@ abstract class HomeRemoteDataSource {
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   final http.Client client;
   final SharedPreferences sharedPreferences;
-
-  // Use 10.0.2.2 for Android Emulator, localhost for Web
-  final String baseUrl = "http://localhost:8000";
-
   HomeRemoteDataSourceImpl({
     required this.client,
     required this.sharedPreferences,
@@ -40,7 +37,9 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
         // Start the loop ONLY when someone listens
         while (isActive) {
           try {
-            final url = Uri.parse('$baseUrl/metrics/latest/$deviceId');
+            final url = Uri.parse(
+              '${AppConfig.baseUrl}/metrics/latest/$deviceId',
+            );
             final response = await client.get(url, headers: _getHeaders());
 
             // Check flag again after await (Crucial!)

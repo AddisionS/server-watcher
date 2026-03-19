@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/device_model.dart';
 import '../models/firmware_response.dart';
+import '../../../app_config.dart';
 
 abstract class DevicesRemoteDataSource {
   Future<List<DeviceModel>> getDevices();
@@ -14,9 +15,6 @@ abstract class DevicesRemoteDataSource {
 class DevicesRemoteDataSourceImpl implements DevicesRemoteDataSource {
   final http.Client client;
   final SharedPreferences sharedPreferences;
-
-  // Use 10.0.2.2 for Android Emulator, localhost for Web
-  final String baseUrl = "http://127.0.0.1:8000";
 
   DevicesRemoteDataSourceImpl({
     required this.client,
@@ -37,7 +35,7 @@ class DevicesRemoteDataSourceImpl implements DevicesRemoteDataSource {
 
   @override
   Future<List<DeviceModel>> getDevices() async {
-    final url = Uri.parse('$baseUrl/admin/devices/');
+    final url = Uri.parse('${AppConfig.baseUrl}/admin/devices/');
 
     final response = await client.get(url, headers: _getHeaders());
 
@@ -54,7 +52,7 @@ class DevicesRemoteDataSourceImpl implements DevicesRemoteDataSource {
 
   @override
   Future<FirmwareResponse> addDevice(String room) async {
-    final url = Uri.parse('$baseUrl/admin/devices/');
+    final url = Uri.parse('${AppConfig.baseUrl}/admin/devices/');
 
     final response = await client.post(
       url,
@@ -90,8 +88,7 @@ class DevicesRemoteDataSourceImpl implements DevicesRemoteDataSource {
 
   @override
   Future<void> deleteDevice(String id) async {
-    final url = Uri.parse('$baseUrl/admin/devices/$id');
-
+    final url = Uri.parse('${AppConfig.baseUrl}/admin/devices/$id');
     final response = await client.delete(url, headers: _getHeaders());
 
     if (response.statusCode != 204) {
@@ -101,7 +98,7 @@ class DevicesRemoteDataSourceImpl implements DevicesRemoteDataSource {
 
   @override
   Future<void> updateDevice(String id, String newRoom) async {
-    final url = Uri.parse('$baseUrl/admin/devices/');
+    final url = Uri.parse('${AppConfig.baseUrl}/admin/devices/');
 
     final response = await client.put(
       url,

@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/config_entities.dart';
-import '../models/thresholds_model.dart'; // Import your model
+import '../models/thresholds_model.dart';
+import '../../../app_config.dart';
 
 // Define the Interface (matches what you already have)
 abstract class ConfigRemoteDataSource {
@@ -14,7 +15,6 @@ abstract class ConfigRemoteDataSource {
 class ConfigRemoteDataSourceImpl implements ConfigRemoteDataSource {
   final http.Client client;
   final SharedPreferences sharedPreferences;
-  final String baseUrl = "http://127.0.0.1:8000";
 
   ConfigRemoteDataSourceImpl({
     required this.client,
@@ -31,8 +31,7 @@ class ConfigRemoteDataSourceImpl implements ConfigRemoteDataSource {
 
   @override
   Future<ThresholdsEntity> fetchThresholds() async {
-    final url = Uri.parse('$baseUrl/admin/thresholds/');
-
+    final url = Uri.parse('${AppConfig.baseUrl}/admin/thresholds/');
     final response = await client.get(url, headers: _getHeaders());
 
     if (response.statusCode == 200) {
@@ -45,7 +44,7 @@ class ConfigRemoteDataSourceImpl implements ConfigRemoteDataSource {
 
   @override
   Future<void> postThresholds(ThresholdsEntity data) async {
-    final url = Uri.parse('$baseUrl/admin/thresholds/');
+    final url = Uri.parse('${AppConfig.baseUrl}/admin/thresholds/');
 
     // Convert Entity -> Model -> JSON
     final model = ThresholdsModel(
