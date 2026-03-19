@@ -17,6 +17,6 @@ def generate_firmware(
         .replace("{{FIRMWARE_VERSION}}", str(FIRMWARE_VERSION))
         .replace("{{SERVER_HOST}}", str(SERVER_HOST))
         .replace("{{SERVER_PORT}}", str(SERVER_PORT))
-        .replace("{{INGEST_PATH}}", "/ingest")
-        .replace("{{STATUS_PATH}}", "/status")
+        .replace("{{INGEST_PATH}}", "/api/ingest")
+        .replace("{{STATUS_PATH}}", "/api/status")
     )
