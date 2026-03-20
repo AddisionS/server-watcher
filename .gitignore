@@ -33,7 +33,6 @@ migrate_working_dir/
 /build/*
 !build/web/
 /coverage/
-web/
 # Symbolication related
 app.*.symbols
 
