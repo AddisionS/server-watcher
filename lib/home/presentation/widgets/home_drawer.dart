@@ -9,6 +9,7 @@ import '../../../config/presentation/pages/config_page.dart';
 import '../../../history/presentation/pages/history_page.dart';
 import '../../../alerts/presentation/pages/alerts_page.dart';
 import '../../../devices/presentation/pages/device_manager_page.dart';
+import '../../../user/presentation/pages/user_management_page.dart';
 
 class HomeDrawer extends StatelessWidget {
   final UserEntity user;
@@ -85,7 +86,7 @@ class HomeDrawer extends StatelessWidget {
             onTap: () => _navigate(context, HomePage(user: user)),
           ),
 
-          if (user.role == 'ADMIN') ...[
+          if (user.role == 'admin') ...[
             _buildMenuItem(
               context: context,
               title: "Configuration",
@@ -99,6 +100,14 @@ class HomeDrawer extends StatelessWidget {
               icon: Icons.devices_outlined,
               isActive: activePage == "Device Manager",
               onTap: () => _navigate(context, DeviceManagerPage(user: user)),
+            ),
+            _buildMenuItem(
+              context: context,
+              title: "User Management",
+              icon: Icons.people_outline,
+              isActive: activePage == "User Management",
+              onTap: () =>
+                  _navigate(context, UserManagementPage(currentUser: user)),
             ),
           ],
 
