@@ -6,7 +6,7 @@ from enum import Enum
 def require_role(*allowed_roles):
     def _checker(user=Depends(decode_token)):
         normalized_roles = [
-            role.value if isinstance(role, Enum) else role
+            (role.value if isinstance(role, Enum) else role).lower()
             for role in allowed_roles
         ]
 
