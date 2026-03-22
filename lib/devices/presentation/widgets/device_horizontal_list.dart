@@ -1,3 +1,5 @@
+// lib/devices/presentation/widgets/device_horizontal_list.dart
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,18 +19,35 @@ class DeviceHorizontalList extends StatefulWidget {
 }
 
 class _DeviceHorizontalListState extends State<DeviceHorizontalList> {
-  // 1. Create a ScrollController
   final ScrollController _scrollController = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final deviceState = context.read<DevicesBloc>().state;
+
+      if (deviceState is DevicesLoaded &&
+          deviceState.selectedDeviceId != null) {
+        final deviceId = deviceState.selectedDeviceId!;
+        context.read<DevicesBloc>().add(SelectDevice(deviceId));
+        if (widget.isHomePage) {
+          context.read<HomeBloc>().add(HomeDeviceChanged(deviceId));
+        }
+      }
+    });
+  }
+
+  @override
   void dispose() {
-    _scrollController.dispose(); // Always dispose controllers
+    _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Increased height slightly (100 -> 110) to make room for the scrollbar
     return SizedBox(
       height: 110,
       child: BlocBuilder<DevicesBloc, DevicesState>(
@@ -39,17 +58,15 @@ class _DeviceHorizontalListState extends State<DeviceHorizontalList> {
           if (state is DevicesError) return Center(child: Text(state.message));
 
           if (state is DevicesLoaded) {
-            // 2. Wrap in RawScrollbar for custom styling
             return RawScrollbar(
               controller: _scrollController,
-              thumbVisibility: true, // Always visible
-              trackVisibility: true, // Show the track background (optional)
-              thickness: 1, // Thin style
-              radius: const Radius.circular(20), // Rounded edges
+              thumbVisibility: true,
+              trackVisibility: true,
+              thickness: 1,
+              radius: const Radius.circular(20),
               thumbColor: Colors.grey.withValues(alpha: 0.5),
               trackColor: Colors.grey.withValues(alpha: 0.1),
-              padding: const EdgeInsets.only(bottom: 1), // Spacing from bottom
-
+              padding: const EdgeInsets.only(bottom: 1),
               child: ScrollConfiguration(
                 behavior: ScrollConfiguration.of(context).copyWith(
                   dragDevices: {
@@ -58,15 +75,9 @@ class _DeviceHorizontalListState extends State<DeviceHorizontalList> {
                   },
                 ),
                 child: ListView.separated(
-                  // 3. Attach the SAME controller here
                   controller: _scrollController,
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.fromLTRB(
-                    16,
-                    0,
-                    16,
-                    12,
-                  ), // Bottom padding prevents scrollbar overlapping content
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   itemCount: state.devices.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 12),
                   itemBuilder: (context, index) {

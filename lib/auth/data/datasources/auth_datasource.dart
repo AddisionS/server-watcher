@@ -29,7 +29,6 @@ class AuthDataSourceImpl implements AuthDataSource {
 
       if (response.statusCode == 200) {
         final jsonMap = jsonDecode(response.body);
-        print('Login successful: \n $jsonMap');
         return UserModel.fromJson(jsonMap, username);
       } else if (response.statusCode == 401) {
         throw Exception('Invalid Credentials');

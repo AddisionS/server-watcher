@@ -50,10 +50,10 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
               final data = SensorModel.fromJson(jsonMap);
               controller.add(data); // Push data
             } else {
-              print("Polling Error: ${response.statusCode}");
+              // Handle non-200 responses if needed (optional)
             }
           } catch (e) {
-            print("Network Error: $e");
+            // Handle errors (optional: you can add error handling logic here)
           }
 
           // Wait 2 seconds, but check flag periodically or after wait

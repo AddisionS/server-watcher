@@ -21,9 +21,6 @@ class UsersRemoteDataSourceImpl implements UsersRemoteDataSource {
 
   Map<String, String> _getHeaders() {
     final token = sharedPreferences.getString('auth_token') ?? '';
-    print(
-      "Using Following credentials for request: \n token: $token\n role: ${sharedPreferences.getString('CACHED_ROLE')}",
-    );
     return {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',

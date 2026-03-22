@@ -24,9 +24,6 @@ class DevicesRemoteDataSourceImpl implements DevicesRemoteDataSource {
   // Helper for Auth Headers
   Map<String, String> _getHeaders() {
     final token = sharedPreferences.getString('auth_token') ?? '';
-    print(
-      "Using Following credentials for request: \n token: $token\n role: ${sharedPreferences.getString('CACHED_ROLE')}",
-    );
     return {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
@@ -42,7 +39,6 @@ class DevicesRemoteDataSourceImpl implements DevicesRemoteDataSource {
     if (response.statusCode == 200) {
       final Map<String, dynamic> jsonResponse = json.decode(response.body);
       final List<dynamic> devicesList = jsonResponse['devices'];
-      print("Devices fetched: $devicesList");
 
       return devicesList.map((json) => DeviceModel.fromJson(json)).toList();
     } else {
