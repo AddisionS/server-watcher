@@ -7,6 +7,7 @@ import '../../config/presentation/pages/config_page.dart';
 import '../../history/presentation/pages/history_page.dart';
 import '../../alerts/presentation/pages/alerts_page.dart';
 import '../../devices/presentation/pages/device_manager_page.dart';
+import '../../user/presentation/pages/user_management_page.dart';
 import 'go_router_refresh_stream.dart';
 
 GoRouter createRouter(AuthBloc authBloc) {
@@ -80,6 +81,20 @@ GoRouter createRouter(AuthBloc authBloc) {
         builder: (context, state) {
           final user = (authBloc.state as AuthSuccess).user;
           return DeviceManagerPage(user: user);
+        },
+      ),
+      GoRoute(
+        path: '/users',
+        redirect: (context, state) {
+          final authState = authBloc.state;
+          if (authState is AuthSuccess && authState.user.role == 'ADMIN') {
+            return null;
+          }
+          return '/dashboard';
+        },
+        builder: (context, state) {
+          final user = (authBloc.state as AuthSuccess).user;
+          return UserManagementPage(currentUser: user);
         },
       ),
     ],
