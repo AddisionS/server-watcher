@@ -72,32 +72,37 @@ class _AlertsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AlertsBloc, AlertsState>(
-      builder: (context, state) {
-        if (state is AlertsLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (state is AlertsError) return Center(child: Text(state.message));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Device List (ALWAYS VISIBLE)
+        const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            "Select Device",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+        ),
+        const DeviceHorizontalList(isHomePage: false),
+        const Divider(),
 
-        if (state is AlertsLoaded) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. Device List
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  "Select Device",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-              ),
-              const DeviceHorizontalList(isHomePage: false),
+        // 2. Alerts List (DEPENDS ON STATE)
+        Expanded(
+          child: BlocBuilder<AlertsBloc, AlertsState>(
+            builder: (context, state) {
+              if (state is AlertsLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (state is AlertsError)
+                return Center(child: Text(state.message));
 
-              const Divider(),
-
-              // 2. Alerts List
-              Expanded(
-                child: ListView.separated(
+              if (state is AlertsLoaded) {
+                if (state.alerts.isEmpty) {
+                  return const Center(
+                    child: Text("No alerts found for this device."),
+                  );
+                }
+                return ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: state.alerts.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
@@ -137,13 +142,15 @@ class _AlertsContent extends StatelessWidget {
                       ),
                     );
                   },
-                ),
-              ),
-            ],
-          );
-        }
-        return const Center(child: CircularProgressIndicator());
-      },
+                );
+              }
+              return const Center(
+                child: Text("Select a device to view alerts."),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

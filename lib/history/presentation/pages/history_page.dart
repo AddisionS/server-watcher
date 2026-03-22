@@ -81,113 +81,123 @@ class _HistoryContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 800;
 
-    return BlocBuilder<HistoryBloc, HistoryState>(
-      builder: (context, state) {
-        // Handle Loading/Error
-        if (state is HistoryLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (state is HistoryError) return Center(child: Text(state.message));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // --- 1. NEW DEVICE LIST (ALWAYS VISIBLE) ---
+        const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            "Select Device",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        const DeviceHorizontalList(isHomePage: false),
 
-        if (state is HistoryLoaded) {
-          final graphData = state.historyData.reversed.toList();
+        const SizedBox(height: 20),
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- 1. NEW DEVICE LIST ---
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  "Select Device",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const DeviceHorizontalList(isHomePage: false),
+        // --- 2. DATA CONTENT ---
+        Expanded(
+          child: BlocBuilder<HistoryBloc, HistoryState>(
+            builder: (context, state) {
+              // Handle Loading/Error
+              if (state is HistoryLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (state is HistoryError)
+                return Center(child: Text(state.message));
 
-              const SizedBox(height: 20),
+              if (state is HistoryLoaded) {
+                final graphData = state.historyData.reversed.toList();
 
-              // --- 2. THE GRAPHS ---
-              AspectRatio(
-                aspectRatio: isDesktop ? 4 : 1.2,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: isDesktop
-                      ? Row(
-                          children: [
-                            Expanded(
-                              child: SensorChart(
-                                title: "24h Temperature",
-                                data: graphData,
-                                isTemperature: true,
-                                lineColor: Colors.red,
+                return Column(
+                  children: [
+                    // --- 2. THE GRAPHS ---
+                    AspectRatio(
+                      aspectRatio: isDesktop ? 4 : 1.2,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: isDesktop
+                            ? Row(
+                                children: [
+                                  Expanded(
+                                    child: SensorChart(
+                                      title: "24h Temperature",
+                                      data: graphData,
+                                      isTemperature: true,
+                                      lineColor: Colors.red,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: SensorChart(
+                                      title: "24h Humidity",
+                                      data: graphData,
+                                      isTemperature: false,
+                                      lineColor: Colors.blue,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : PageView(
+                                children: [
+                                  SensorChart(
+                                    title: "24h Temperature",
+                                    data: graphData,
+                                    isTemperature: true,
+                                    lineColor: Colors.red,
+                                  ),
+                                  SensorChart(
+                                    title: "24h Humidity",
+                                    data: graphData,
+                                    isTemperature: false,
+                                    lineColor: Colors.blue,
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+
+                    const Divider(thickness: 2),
+
+                    // --- 3. The Log List ---
+                    Expanded(
+                      child: ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: state.historyData.length,
+                        separatorBuilder: (_, _) => const Divider(),
+                        itemBuilder: (context, index) {
+                          final data = state.historyData[index];
+                          final timeString =
+                              "${data.timestamp.hour.toString().padLeft(2, '0')}:${data.timestamp.minute.toString().padLeft(2, '0')}";
+
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.white10,
+                              child: const Icon(
+                                Icons.access_time,
+                                size: 20,
+                                color: Colors.white70,
                               ),
                             ),
-                            Expanded(
-                              child: SensorChart(
-                                title: "24h Humidity",
-                                data: graphData,
-                                isTemperature: false,
-                                lineColor: Colors.blue,
-                              ),
+                            title: Text("Time: $timeString"),
+                            subtitle: Text(
+                              "Temp: ${data.temperature.toStringAsFixed(1)}°C  |  Hum: ${data.humidity.toStringAsFixed(1)}%",
                             ),
-                          ],
-                        )
-                      : PageView(
-                          children: [
-                            SensorChart(
-                              title: "24h Temperature",
-                              data: graphData,
-                              isTemperature: true,
-                              lineColor: Colors.red,
-                            ),
-                            SensorChart(
-                              title: "24h Humidity",
-                              data: graphData,
-                              isTemperature: false,
-                              lineColor: Colors.blue,
-                            ),
-                          ],
-                        ),
-                ),
-              ),
-
-              const Divider(thickness: 2),
-
-              // --- 3. The Log List ---
-              Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: state.historyData.length,
-                  separatorBuilder: (_, _) => const Divider(),
-                  itemBuilder: (context, index) {
-                    final data = state.historyData[index];
-                    final timeString =
-                        "${data.timestamp.hour.toString().padLeft(2, '0')}:${data.timestamp.minute.toString().padLeft(2, '0')}";
-
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.white10,
-                        child: const Icon(
-                          Icons.access_time,
-                          size: 20,
-                          color: Colors.white70,
-                        ),
+                          );
+                        },
                       ),
-                      title: Text("Time: $timeString"),
-                      subtitle: Text(
-                        "Temp: ${data.temperature.toStringAsFixed(1)}°C  |  Hum: ${data.humidity.toStringAsFixed(1)}%",
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        }
-        // Initial State (Waiting for selection)
-        return const Center(child: CircularProgressIndicator());
-      },
+                    ),
+                  ],
+                );
+              }
+              // Initial State (Waiting for selection)
+              return const Center(
+                child: Text("Select a device to view history."),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
