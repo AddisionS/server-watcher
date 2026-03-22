@@ -86,7 +86,7 @@ class HomeDrawer extends StatelessWidget {
             onTap: () => _navigate(context, HomePage(user: user)),
           ),
 
-          if (user.role == 'admin') ...[
+          if (user.role == 'ADMIN' || user.role == 'DEVELOPER') ...[
             _buildMenuItem(
               context: context,
               title: "Configuration",

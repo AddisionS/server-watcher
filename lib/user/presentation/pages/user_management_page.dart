@@ -145,12 +145,12 @@ class _UserManagementContent extends StatelessWidget {
 
                         // Role Badge Color
                         Color roleColor = Colors.grey;
-                        if (user.role == 'admin')
-                          roleColor = theme.colorScheme.error; // Red
-                        else if (user.role == 'developer')
-                          roleColor = theme.colorScheme.tertiary; // Purple
-                        else if (user.role == 'user')
-                          roleColor = theme.colorScheme.primary; // Green
+                        if (user.role == 'ADMIN')
+                          roleColor = theme.colorScheme.error;
+                        else if (user.role == 'DEVELOPER')
+                          roleColor = theme.colorScheme.tertiary;
+                        else if (user.role == 'USER')
+                          roleColor = theme.colorScheme.primary;
 
                         return ListTile(
                           contentPadding: const EdgeInsets.symmetric(
@@ -256,7 +256,7 @@ class _AddUserDialogState extends State<_AddUserDialog> {
   final _formKey = GlobalKey<FormState>();
   final _usernameCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  String _selectedRole = 'user'; // Default role
+  String _selectedRole = 'USER'; // Default role
   bool _obscurePassword = true;
 
   @override
@@ -329,18 +329,18 @@ class _AddUserDialogState extends State<_AddUserDialog> {
 
               // 3. Role Dropdown
               DropdownButtonFormField<String>(
-                value: _selectedRole,
+                initialValue: _selectedRole,
                 decoration: const InputDecoration(
                   labelText: "Role",
                   prefixIcon: Icon(Icons.shield),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'user', child: Text("User")),
+                  DropdownMenuItem(value: 'USER', child: Text("User")),
                   DropdownMenuItem(
-                    value: 'developer',
+                    value: 'DEVELOPER',
                     child: Text("Developer"),
                   ),
-                  DropdownMenuItem(value: 'admin', child: Text("Admin")),
+                  DropdownMenuItem(value: 'ADMIN', child: Text("Admin")),
                 ],
                 onChanged: (val) => setState(() => _selectedRole = val!),
               ),

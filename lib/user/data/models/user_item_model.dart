@@ -6,7 +6,7 @@ class UserItemModel extends UserItemEntity {
   factory UserItemModel.fromJson(Map<String, dynamic> json) {
     return UserItemModel(
       username: json['username'] ?? 'Unknown',
-      role: json['role'] ?? 'user',
+      role: json['role'] ?? 'USER',
     );
   }
 }
