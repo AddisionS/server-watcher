@@ -29,76 +29,10 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>ServerWatcher</title>
+  <title>temper</title>
   <link rel="manifest" href="manifest.json">
-  
-  <style>
-    body {
-      background-color: #121418; /* Matches your AppTheme background */
-      margin: 0;
-      overflow: hidden;
-    }
-    #loader-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: #121418;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      transition: opacity 0.4s ease-out; /* Smooth fade out */
-    }
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid #1C1F26; /* Dark Card Color */
-      border-top: 4px solid #3B82F6; /* Electric Blue */
-      border-right: 4px solid #2ECA8B; /* Neon Green */
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 24px;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .loader-text {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      font-size: 24px;
-      font-weight: 600;
-      color: #F8F9FA; /* Crisp White */
-      letter-spacing: 0.5px;
-    }
-    .loader-text span {
-      color: #2ECA8B; /* Neon Green */
-    }
-  </style>
 </head>
-<body class="light">
-  <div id="loader-container">
-    <div class="spinner"></div>
-    <div class="loader-text">Server<span>-Watcher</span></div>
-  </div>
-
-  <!-- Force HTML renderer BEFORE bootstrap loads -->
-  <script>
-    window.flutterConfiguration = {
-      renderer: "html"
-    };
-  </script>
-
+<body>
   <script src="flutter_bootstrap.js" async></script>
-
-  <!-- Hide loader when Flutter renders first frame -->
-  <script>
-        window.addEventListener('flutter-first-frame', function () {
-      const loader = document.getElementById('loader-container');
-      if (loader) loader.remove();
-    });
-  </script>
 </body>
 </html>

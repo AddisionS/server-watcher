@@ -93,6 +93,13 @@ class HomeDrawer extends StatelessWidget {
               isActive: activePage == "Device Manager",
               onTap: () => context.go('/devices'),
             ),
+            _buildMenuItem(
+              context: context,
+              title: "User Management",
+              icon: Icons.people_outline,
+              isActive: activePage == "User Management",
+              onTap: () => context.go('/users'),
+            ),
           ],
 
           _buildMenuItem(

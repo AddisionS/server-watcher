@@ -20,10 +20,12 @@ GoRouter createRouter(AuthBloc authBloc) {
       final isLoggedIn = authState is AuthSuccess;
       final isOnLogin = state.matchedLocation == '/login';
 
-      if (!isLoggedIn && !isOnLogin)
+      if (!isLoggedIn && !isOnLogin) {
         return '/login'; // Not logged in → force to login
-      if (isLoggedIn && isOnLogin)
+      }
+      if (isLoggedIn && isOnLogin) {
         return '/dashboard'; // Already logged in → skip login
+      }
       return null; // No redirect needed
     },
 

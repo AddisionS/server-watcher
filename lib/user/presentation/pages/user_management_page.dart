@@ -145,9 +145,9 @@ class _UserManagementContent extends StatelessWidget {
 
                         // Role Badge Color
                         Color roleColor = Colors.grey;
-                        if (user.role == 'ADMIN')
+                        if (user.role == 'ADMIN') {
                           roleColor = theme.colorScheme.error;
-                        else if (user.role == 'DEVELOPER')
+                        } else if (user.role == 'DEVELOPER')
                           roleColor = theme.colorScheme.tertiary;
                         else if (user.role == 'USER')
                           roleColor = theme.colorScheme.primary;
@@ -284,8 +284,9 @@ class _AddUserDialogState extends State<_AddUserDialog> {
                   prefixIcon: Icon(Icons.person),
                 ),
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty)
+                  if (value == null || value.trim().isEmpty) {
                     return "Username is required";
+                  }
                   if (value.length >= 50) return "Must be under 50 characters";
 
                   // Uniqueness Check
@@ -318,10 +319,12 @@ class _AddUserDialogState extends State<_AddUserDialog> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return "Password is required";
-                  if (value.length < 8)
+                  }
+                  if (value.length < 8) {
                     return "Password must be at least 8 characters";
+                  }
                   return null;
                 },
               ),

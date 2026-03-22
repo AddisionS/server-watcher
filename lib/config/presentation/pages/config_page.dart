@@ -128,11 +128,13 @@ class _ConfigFormState extends State<_ConfigForm> {
   }
 
   String? _validatePhone(String? value) {
-    if (value == null || value.trim().isEmpty)
+    if (value == null || value.trim().isEmpty) {
       return 'Phone number is required';
+    }
     final digitsOnly = value.trim().replaceAll(RegExp(r'\D'), '');
-    if (digitsOnly.length != 10)
+    if (digitsOnly.length != 10) {
       return 'Enter exactly 10 digits (e.g. 9876543210)';
+    }
     return null;
   }
 
