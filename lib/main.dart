@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app_theme.dart';
-// Imports from your layers
+
 import 'auth/data/datasources/auth_datasource.dart';
 import 'auth/data/repositories/repo_impl.dart';
 import 'auth/presentation/bloc/auth_bloc.dart';
@@ -13,12 +13,15 @@ import 'auth/domain/usecases/login_usecase.dart';
 import 'auth/domain/usecases/logout_usecase.dart';
 import 'auth/domain/usecases/auth_check_usecase.dart';
 
-// Devices - app-level providers
 import 'devices/data/datasources/devices_datasource.dart';
 import 'devices/data/repositories/devices_repository_impl.dart';
 import 'devices/domain/usecases/device_usecases.dart';
 import 'devices/presentation/bloc/devices_bloc.dart';
 import 'devices/presentation/bloc/devices_event.dart';
+
+import 'config/data/datasources/config_data_source.dart';
+import 'config/data/repositories/config_repository_impl.dart';
+
 import 'package:http/http.dart' as http;
 
 void main() async {
@@ -41,24 +44,24 @@ class MyApp extends StatelessWidget {
     );
     final authRepository = AuthRepositoryImpl(authDataSource: authDataSource);
 
-    final loginUseCase = LoginUseCase(authRepository);
-    final logoutUseCase = LogoutUseCase(authRepository);
-    final checkAuthStatusUseCase = CheckAuthStatusUseCase(authRepository);
-
     return MultiRepositoryProvider(
       providers: [
-        // --- INJECT HTTP CLIENT ---
-        RepositoryProvider<http.Client>(create: (context) => httpClient),
+        RepositoryProvider<http.Client>(create: (_) => httpClient),
+        RepositoryProvider<SharedPreferences>(create: (_) => sharedPreferences),
 
-        // --- INJECT SHARED PREFERENCES ---
-        RepositoryProvider<SharedPreferences>(
-          create: (context) => sharedPreferences,
-        ),
-
-        // --- INJECT DEVICES REPOSITORY ---
         RepositoryProvider<DevicesRepositoryImpl>(
           create: (_) => DevicesRepositoryImpl(
             DevicesRemoteDataSourceImpl(
+              client: httpClient,
+              sharedPreferences: sharedPreferences,
+            ),
+          ),
+        ),
+
+        // NEW: App-level ConfigRepository using real data source
+        RepositoryProvider<ConfigRepositoryImpl>(
+          create: (_) => ConfigRepositoryImpl(
+            remoteDataSource: ConfigRemoteDataSourceImpl(
               client: httpClient,
               sharedPreferences: sharedPreferences,
             ),
@@ -68,10 +71,10 @@ class MyApp extends StatelessWidget {
       child: MultiBlocProvider(
         providers: [
           BlocProvider<AuthBloc>(
-            create: (context) => AuthBloc(
-              loginUseCase: loginUseCase,
-              checkAuthStatusUseCase: checkAuthStatusUseCase,
-              logoutUseCase: logoutUseCase,
+            create: (_) => AuthBloc(
+              loginUseCase: LoginUseCase(authRepository),
+              checkAuthStatusUseCase: CheckAuthStatusUseCase(authRepository),
+              logoutUseCase: LogoutUseCase(authRepository),
             )..add(AuthCheckCacheRequested()),
           ),
           BlocProvider<DevicesBloc>(
@@ -94,13 +97,8 @@ class MyApp extends StatelessWidget {
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Server Watcher',
-
-          // --- 3. FORCE DARK MODE HERE ---
           themeMode: ThemeMode.dark,
-
-          // --- 4. DEFINE THE DARK THEME ---
           darkTheme: AppTheme.darkTheme,
-
           home: const LoginPage(),
         ),
       ),

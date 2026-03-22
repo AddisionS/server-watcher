@@ -2,28 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-// Domain & Data Imports
+
 import '../../../../auth/domain/entities/user_entity.dart';
 import '../../domain/usecases/data_fetch_usecase.dart';
 import '../../data/datasources/home_datasource.dart';
 import '../../data/repositories/home_repository_impl.dart';
-import '../../../config/data/datasources/config_mock_data_source.dart';
+
 import '../../../config/data/repositories/config_repository_impl.dart';
 import '../../../config/domain/usecases/get_thresholds_usecase.dart';
 
-// Export Feature Imports
 import '../../../export/data/datasources/export_mock_data_source.dart';
 import '../../../export/data/repositories/export_repository_impl.dart';
 import '../../../export/domain/usecases/download_report_usecase.dart';
 import '../../../export/presentation/bloc/export_bloc.dart';
 import '../../../export/presentation/widgets/export_section.dart';
 
-// Devices Feature Imports
 import '../../../../devices/presentation/widgets/device_horizontal_list.dart';
 import '../../../../devices/presentation/bloc/devices_bloc.dart';
 import '../../../../devices/presentation/bloc/devices_state.dart';
 
-// Home Widgets & Bloc
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
@@ -33,13 +30,13 @@ import '../widgets/main_layout.dart';
 
 class HomePage extends StatelessWidget {
   final UserEntity user;
-
   const HomePage({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
     final httpClient = context.read<http.Client>();
     final sharedPrefs = context.read<SharedPreferences>();
+
     final homeRepo = HomeRepositoryImpl(
       remoteDataSource: HomeRemoteDataSourceImpl(
         client: httpClient,
@@ -47,10 +44,7 @@ class HomePage extends StatelessWidget {
       ),
     );
 
-    final configRepo = ConfigRepositoryImpl(
-      remoteDataSource: ConfigMockDataSourceImpl(),
-    );
-
+    final configRepo = context.read<ConfigRepositoryImpl>();
     final exportRepo = ExportRepositoryImpl(ExportMockDataSourceImpl());
 
     return MultiBlocProvider(
@@ -71,11 +65,10 @@ class HomePage extends StatelessWidget {
         listener: (context, state) {
           if (state is DevicesLoaded) {
             if (state.devices.isNotEmpty) {
-              // Case A: We have devices -> Start Polling
-              final firstDeviceId = state.devices.first.id;
-              context.read<HomeBloc>().add(HomeDeviceChanged(firstDeviceId));
+              context.read<HomeBloc>().add(
+                HomeDeviceChanged(state.devices.first.id),
+              );
             } else {
-              // Case B: No devices -> STOP Polling
               context.read<HomeBloc>().add(HomeStopPolling());
             }
           }
@@ -96,13 +89,12 @@ class HomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isWideScreen = MediaQuery.of(context).size.width >= 1000;
-    final theme = Theme.of(context); // Get theme
+    final theme = Theme.of(context);
 
     return BlocBuilder<HomeBloc, HomeState>(
       builder: (context, state) {
-        if (state is HomeLoading) {
+        if (state is HomeLoading)
           return const Center(child: CircularProgressIndicator());
-        }
         if (state is HomeError) return Center(child: Text(state.message));
 
         if (state is HomeLoaded) {
@@ -127,7 +119,6 @@ class HomeContent extends StatelessWidget {
                 const DeviceHorizontalList(isHomePage: true),
                 const SizedBox(height: 20),
 
-                // --- 2. GAUGES SECTION (Wrapped in Card) ---
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(32.0),
@@ -157,7 +148,6 @@ class HomeContent extends StatelessWidget {
 
                 const SizedBox(height: 30),
 
-                // --- 3. GRAPHS ---
                 if (isWideScreen)
                   AspectRatio(
                     aspectRatio: 3.5,
@@ -168,7 +158,7 @@ class HomeContent extends StatelessWidget {
                             title: "Temperature",
                             data: state.sensorData,
                             isTemperature: true,
-                            lineColor: theme.colorScheme.error, // Theme Red
+                            lineColor: theme.colorScheme.error,
                           ),
                         ),
                         const SizedBox(width: 24),
@@ -177,7 +167,7 @@ class HomeContent extends StatelessWidget {
                             title: "Humidity",
                             data: state.sensorData,
                             isTemperature: false,
-                            lineColor: theme.colorScheme.primary, // Theme Green
+                            lineColor: theme.colorScheme.primary,
                           ),
                         ),
                       ],

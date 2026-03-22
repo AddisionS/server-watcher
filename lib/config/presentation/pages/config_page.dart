@@ -1,35 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:serverwatcher/config/domain/usecases/get_thresholds_usecase.dart';
-import '../../domain/usecases/get_contacts_usecase.dart';
 
-// Domain & Data Imports
 import '../../../auth/domain/entities/user_entity.dart';
-import '../../data/datasources/config_data_source.dart';
 import '../../data/repositories/config_repository_impl.dart';
+import '../../domain/usecases/get_thresholds_usecase.dart';
+import '../../domain/usecases/get_contacts_usecase.dart';
 import '../../domain/usecases/update_config_usecase.dart';
 
-// Bloc Imports
 import '../bloc/config_bloc.dart';
 import '../bloc/config_event.dart';
 import '../bloc/config_state.dart';
-
-// Layout Import
 import '../../../home/presentation/widgets/main_layout.dart';
 
 class ConfigPage extends StatelessWidget {
   final UserEntity user;
-
   const ConfigPage({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
-    // 1. Dependency Injection
-    final dataSource = ConfigRemoteDataSourceImpl();
-    final repo = ConfigRepositoryImpl(remoteDataSource: dataSource);
+    // Read from app-level DI — no local construction needed
+    final repo = context.read<ConfigRepositoryImpl>();
 
     return BlocProvider(
-      create: (context) => ConfigBloc(
+      create: (_) => ConfigBloc(
         getThresholdsUseCase: GetThresholdsUseCase(repo),
         updateThresholdsUseCase: UpdateThresholdsUseCase(repo),
         getContactsUseCase: GetContactsUseCase(repo),
@@ -38,8 +31,6 @@ class ConfigPage extends StatelessWidget {
         addPhoneUseCase: AddPhoneUseCase(repo),
         removePhoneUseCase: RemovePhoneUseCase(repo),
       )..add(ConfigInitialLoad()),
-
-      // 2. USE MAIN LAYOUT (Cleaner Structure)
       child: MainLayout(
         user: user,
         title: "System Configuration",
@@ -79,17 +70,19 @@ class _ConfigForm extends StatefulWidget {
 }
 
 class _ConfigFormState extends State<_ConfigForm> {
-  // Controllers
+  // Threshold controllers
   final _subTempCtrl = TextEditingController();
   final _thresTempCtrl = TextEditingController();
   final _subHumCtrl = TextEditingController();
   final _thresHumCtrl = TextEditingController();
 
-  final _emailsCtrl = TextEditingController();
-  final _phonesCtrl = TextEditingController();
+  // Contact input controllers (for ADDING new entries only)
+  final _emailInputCtrl = TextEditingController();
+  final _phoneInputCtrl = TextEditingController();
 
   final _thresholdFormKey = GlobalKey<FormState>();
-  final _contactFormKey = GlobalKey<FormState>();
+  final _emailFormKey = GlobalKey<FormState>();
+  final _phoneFormKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
@@ -97,30 +90,59 @@ class _ConfigFormState extends State<_ConfigForm> {
     _thresTempCtrl.dispose();
     _subHumCtrl.dispose();
     _thresHumCtrl.dispose();
-    _emailsCtrl.dispose();
-    _phonesCtrl.dispose();
+    _emailInputCtrl.dispose();
+    _phoneInputCtrl.dispose();
     super.dispose();
+  }
+
+  // --- VALIDATORS ---
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Email is required';
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Enter a valid email (e.g. user@domain.com)';
+    }
+    return null;
+  }
+
+  String? _validatePhone(String? value) {
+    if (value == null || value.trim().isEmpty)
+      return 'Phone number is required';
+    // Strip all non-digits and check for exactly 10
+    final digitsOnly = value.trim().replaceAll(RegExp(r'\D'), '');
+    if (digitsOnly.length != 10)
+      return 'Enter exactly 10 digits (e.g. 9876543210)';
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    // We check width locally just to size buttons
     final isDesktop = MediaQuery.of(context).size.width >= 800;
+    final theme = Theme.of(context);
 
     return BlocListener<ConfigBloc, ConfigState>(
       listener: (context, state) {
+        // Auto-fill threshold fields when data loads
         if (state is ConfigLoaded) {
-          // --- AUTO-FILL LOGIC ---
           _subTempCtrl.text = state.thresholds.subTemp.toString();
           _thresTempCtrl.text = state.thresholds.thresTemp.toString();
           _subHumCtrl.text = state.thresholds.subHum.toString();
           _thresHumCtrl.text = state.thresholds.thresHum.toString();
         }
+        // Clear input fields after a successful add
+        if (state is ConfigSuccess) {
+          _emailInputCtrl.clear();
+          _phoneInputCtrl.clear();
+        }
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- SECTION 1: THRESHOLDS ---
+          // =========================================================
+          // SECTION 1: THRESHOLDS (unchanged logic)
+          // =========================================================
           const Text(
             "Sensor Thresholds",
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -140,7 +162,6 @@ class _ConfigFormState extends State<_ConfigForm> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Temperature Row
                     const Text(
                       "Temperature Range (°C)",
                       style: TextStyle(fontWeight: FontWeight.bold),
@@ -161,8 +182,6 @@ class _ConfigFormState extends State<_ConfigForm> {
                       ],
                     ),
                     const SizedBox(height: 20),
-
-                    // Humidity Row
                     const Text(
                       "Humidity Range (%)",
                       style: TextStyle(fontWeight: FontWeight.bold),
@@ -183,8 +202,6 @@ class _ConfigFormState extends State<_ConfigForm> {
                       ],
                     ),
                     const SizedBox(height: 24),
-
-                    // Submit Thresholds Button
                     SizedBox(
                       width: isDesktop ? 200 : double.infinity,
                       child: ElevatedButton.icon(
@@ -218,10 +235,10 @@ class _ConfigFormState extends State<_ConfigForm> {
                             }
                             context.read<ConfigBloc>().add(
                               SubmitThresholds(
-                                subTemp: double.parse(_subTempCtrl.text),
-                                thresTemp: double.parse(_thresTempCtrl.text),
-                                subHum: double.parse(_subHumCtrl.text),
-                                thresHum: double.parse(_thresHumCtrl.text),
+                                subTemp: subT,
+                                thresTemp: maxT,
+                                subHum: subH,
+                                thresHum: maxH,
                               ),
                             );
                           }
@@ -238,85 +255,291 @@ class _ConfigFormState extends State<_ConfigForm> {
           const Divider(),
           const SizedBox(height: 40),
 
-          // --- SECTION 2: ALERTS ---
+          // =========================================================
+          // SECTION 2: ALERT CONTACTS (fully rebuilt)
+          // =========================================================
           const Text(
             "Alert Contacts",
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           const Text(
-            "Configure who receives SMS and Email alerts.",
+            "Manage who receives SMS and Email alerts. Add or remove individually.",
             style: TextStyle(color: Colors.white70),
           ),
           const SizedBox(height: 20),
 
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Form(
-                key: _contactFormKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Emails
-                    TextFormField(
-                      controller: _emailsCtrl,
-                      decoration: const InputDecoration(
-                        labelText: "Email Addresses",
-                        hintText: "admin@corp.com, manager@corp.com",
-                        helperText: "Separate multiple emails with a comma (,)",
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email),
-                      ),
-                      validator: (v) =>
-                          v!.isEmpty ? "Enter at least one email" : null,
-                    ),
-                    const SizedBox(height: 20),
+          // BlocBuilder drives the contacts card so chips update reactively
+          BlocBuilder<ConfigBloc, ConfigState>(
+            builder: (context, state) {
+              final isLoading = state is ConfigLoading;
+              final contacts = (state is ConfigLoaded) ? state.contacts : null;
 
-                    // Phone Numbers
-                    TextFormField(
-                      controller: _phonesCtrl,
-                      decoration: const InputDecoration(
-                        labelText: "Phone Numbers",
-                        hintText: "+1234567890, +0987654321",
-                        helperText:
-                            "Separate multiple numbers with a comma (,)",
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.phone),
-                      ),
-                      validator: (v) =>
-                          v!.isEmpty ? "Enter at least one number" : null,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Submit Contacts Button
-                    SizedBox(
-                      width: isDesktop ? 200 : double.infinity,
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.notifications_active),
-                        label: const Text("Save Contacts"),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.orangeAccent,
-                          foregroundColor: Colors.white,
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Thin progress bar — visible only during API calls
+                      if (isLoading)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 20),
+                          child: LinearProgressIndicator(),
                         ),
-                        onPressed: () {
-                          if (_contactFormKey.currentState!.validate()) {
-                            context.read<ConfigBloc>().add(
-                              SubmitContacts(
-                                emailsString: _emailsCtrl.text,
-                                phonesString: _phonesCtrl.text,
+
+                      // -----------------------------------------
+                      // EMAIL SUB-SECTION
+                      // -----------------------------------------
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.email_outlined,
+                            size: 20,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Email Addresses",
+                            style: theme.textTheme.titleMedium,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Existing email chips
+                      if (contacts != null && contacts.emails.isNotEmpty)
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: contacts.emails.map((email) {
+                            return InputChip(
+                              label: Text(email),
+                              // onDeleted = null hides the X during loading (clean behaviour)
+                              onDeleted: isLoading
+                                  ? null
+                                  : () => context.read<ConfigBloc>().add(
+                                      RemoveEmailEvent(email),
+                                    ),
+                              deleteIcon: const Icon(Icons.close, size: 16),
+                              backgroundColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.1),
+                              side: BorderSide(
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.4,
+                                ),
+                              ),
+                              labelStyle: TextStyle(
+                                color: theme.colorScheme.onSurface,
                               ),
                             );
-                          }
-                        },
+                          }).toList(),
+                        )
+                      else if (!isLoading)
+                        Text(
+                          "No email addresses configured yet.",
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+
+                      const SizedBox(height: 16),
+
+                      // Add email row
+                      Form(
+                        key: _emailFormKey,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _emailInputCtrl,
+                                enabled: !isLoading,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.done,
+                                decoration: const InputDecoration(
+                                  labelText: "New Email Address",
+                                  hintText: "emailaddress@domain.com",
+                                  hintStyle: TextStyle(color: Colors.white38),
+                                  prefixIcon: Icon(Icons.alternate_email),
+                                ),
+                                validator: _validateEmail,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            // Top-align button with the text field
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: ElevatedButton.icon(
+                                icon: isLoading
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Icon(Icons.add),
+                                label: const Text("Add"),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 18,
+                                    horizontal: 24,
+                                  ),
+                                  backgroundColor: theme.colorScheme.primary,
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: isLoading
+                                    ? null
+                                    : () {
+                                        if (_emailFormKey.currentState!
+                                            .validate()) {
+                                          context.read<ConfigBloc>().add(
+                                            AddEmailEvent(
+                                              _emailInputCtrl.text.trim(),
+                                            ),
+                                          );
+                                        }
+                                      },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+
+                      const SizedBox(height: 32),
+                      const Divider(),
+                      const SizedBox(height: 24),
+
+                      // -----------------------------------------
+                      // PHONE SUB-SECTION
+                      // -----------------------------------------
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.phone_outlined,
+                            size: 20,
+                            color: theme.colorScheme.secondary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Phone Numbers",
+                            style: theme.textTheme.titleMedium,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Existing phone chips
+                      if (contacts != null && contacts.phoneNumbers.isNotEmpty)
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: contacts.phoneNumbers.map((phone) {
+                            return InputChip(
+                              label: Text(phone),
+                              onDeleted: isLoading
+                                  ? null
+                                  : () => context.read<ConfigBloc>().add(
+                                      RemovePhoneEvent(phone),
+                                    ),
+                              deleteIcon: const Icon(Icons.close, size: 16),
+                              backgroundColor: theme.colorScheme.secondary
+                                  .withValues(alpha: 0.1),
+                              side: BorderSide(
+                                color: theme.colorScheme.secondary.withValues(
+                                  alpha: 0.4,
+                                ),
+                              ),
+                              labelStyle: TextStyle(
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            );
+                          }).toList(),
+                        )
+                      else if (!isLoading)
+                        Text(
+                          "No phone numbers configured yet.",
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+
+                      const SizedBox(height: 16),
+
+                      // Add phone row
+                      Form(
+                        key: _phoneFormKey,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _phoneInputCtrl,
+                                enabled: !isLoading,
+                                keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.done,
+                                decoration: const InputDecoration(
+                                  labelText: "New Phone Number",
+                                  hintText:
+                                      " 1234567890 (10 digits without +91)",
+                                  hintStyle: TextStyle(color: Colors.white38),
+                                  prefixIcon: Icon(Icons.phone_iphone),
+                                ),
+                                validator: _validatePhone,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: ElevatedButton.icon(
+                                icon: isLoading
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Icon(Icons.add),
+                                label: const Text("Add"),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 18,
+                                    horizontal: 24,
+                                  ),
+                                  backgroundColor: theme.colorScheme.secondary,
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: isLoading
+                                    ? null
+                                    : () {
+                                        if (_phoneFormKey.currentState!
+                                            .validate()) {
+                                          context.read<ConfigBloc>().add(
+                                            AddPhoneEvent(
+                                              _phoneInputCtrl.text.trim(),
+                                            ),
+                                          );
+                                        }
+                                      },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
+
+          const SizedBox(height: 40),
         ],
       ),
     );
@@ -328,7 +551,6 @@ class _ConfigFormState extends State<_ConfigForm> {
     );
   }
 
-  // Helper builder for numeric inputs
   Widget _buildNumberField(TextEditingController ctrl, String label) {
     return TextFormField(
       controller: ctrl,
@@ -337,7 +559,6 @@ class _ConfigFormState extends State<_ConfigForm> {
         labelText: label,
         border: const OutlineInputBorder(),
         filled: true,
-        // fillColor is handled by the main Theme now
       ),
       validator: (value) {
         if (value == null || value.isEmpty) return 'Required';
