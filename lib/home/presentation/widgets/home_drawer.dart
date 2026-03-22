@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../auth/domain/entities/user_entity.dart';
 import '../../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../auth/presentation/bloc/auth_event.dart';
-import '../../../auth/presentation/pages/login_page.dart';
-import '../../presentation/pages/home_page.dart';
-import '../../../config/presentation/pages/config_page.dart';
-import '../../../history/presentation/pages/history_page.dart';
-import '../../../alerts/presentation/pages/alerts_page.dart';
-import '../../../devices/presentation/pages/device_manager_page.dart';
-import '../../../user/presentation/pages/user_management_page.dart';
 
 class HomeDrawer extends StatelessWidget {
   final UserEntity user;
-  final String activePage; // Used to highlight the current menu item
+  final String activePage;
 
   const HomeDrawer({
     super.key,
@@ -24,15 +18,15 @@ class HomeDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Normalize role to uppercase to handle both 'admin' and 'ADMIN' from any source
+    final isAdmin = user.role.toUpperCase() == 'ADMIN';
 
     return Drawer(
-      backgroundColor: theme
-          .colorScheme
-          .surface, // Use surface color for the drawer background
+      backgroundColor: theme.colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- 1. SLEEK TYPOGRAPHY HEADER ---
+          // --- 1. HEADER ---
           Padding(
             padding: const EdgeInsets.only(top: 40, left: 24, bottom: 32),
             child: Column(
@@ -48,9 +42,7 @@ class HomeDrawer extends StatelessWidget {
                       const TextSpan(text: 'Server '),
                       TextSpan(
                         text: 'Watcher',
-                        style: TextStyle(
-                          color: theme.colorScheme.primary,
-                        ), // Neon Green
+                        style: TextStyle(color: theme.colorScheme.primary),
                       ),
                     ],
                   ),
@@ -83,31 +75,23 @@ class HomeDrawer extends StatelessWidget {
             title: "Dashboard",
             icon: Icons.dashboard_outlined,
             isActive: activePage == "Dashboard",
-            onTap: () => _navigate(context, HomePage(user: user)),
+            onTap: () => context.go('/dashboard'),
           ),
 
-          if (user.role == 'ADMIN' || user.role == 'DEVELOPER') ...[
+          if (isAdmin) ...[
             _buildMenuItem(
               context: context,
               title: "Configuration",
               icon: Icons.settings_outlined,
               isActive: activePage == "System Configuration",
-              onTap: () => _navigate(context, ConfigPage(user: user)),
+              onTap: () => context.go('/config'),
             ),
             _buildMenuItem(
               context: context,
               title: "Device Manager",
               icon: Icons.devices_outlined,
               isActive: activePage == "Device Manager",
-              onTap: () => _navigate(context, DeviceManagerPage(user: user)),
-            ),
-            _buildMenuItem(
-              context: context,
-              title: "User Management",
-              icon: Icons.people_outline,
-              isActive: activePage == "User Management",
-              onTap: () =>
-                  _navigate(context, UserManagementPage(currentUser: user)),
+              onTap: () => context.go('/devices'),
             ),
           ],
 
@@ -116,7 +100,7 @@ class HomeDrawer extends StatelessWidget {
             title: "24h Log",
             icon: Icons.history_outlined,
             isActive: activePage == "24h Log",
-            onTap: () => _navigate(context, HistoryPage(user: user)),
+            onTap: () => context.go('/history'),
           ),
 
           _buildMenuItem(
@@ -124,13 +108,15 @@ class HomeDrawer extends StatelessWidget {
             title: "Alert Logs",
             icon: Icons.warning_amber_outlined,
             isActive: activePage == "System Alerts",
-            onTap: () => _navigate(context, AlertsPage(user: user)),
+            onTap: () => context.go('/alerts'),
           ),
 
           const Spacer(),
           const Divider(),
 
           // --- 4. LOGOUT ---
+          // No manual navigation needed — GoRouterRefreshStream detects
+          // AuthInitial state and the router redirect fires automatically
           Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
             child: ListTile(
@@ -142,24 +128,11 @@ class HomeDrawer extends StatelessWidget {
               ),
               onTap: () {
                 context.read<AuthBloc>().add(AuthLogoutRequested());
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginPage()),
-                  (route) => false,
-                );
               },
             ),
           ),
         ],
       ),
-    );
-  }
-
-  void _navigate(BuildContext context, Widget page) {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => page),
-      (route) => false,
     );
   }
 
@@ -190,7 +163,7 @@ class HomeDrawer extends StatelessWidget {
           ),
         ),
         selected: isActive,
-        selectedTileColor: theme.colorScheme.outline, // Highlight background
+        selectedTileColor: theme.colorScheme.outline,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         onTap: onTap,
       ),

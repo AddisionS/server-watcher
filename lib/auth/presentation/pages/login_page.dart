@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
-import '../../../home/presentation/pages/home_page.dart' deferred as home_page;
+
+// No Navigator or HomePage import needed —
+// GoRouter's refreshListenable handles the redirect on AuthSuccess
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,7 +15,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // ... (Keep your controllers and variables exactly the same) ...
   final TextEditingController userController = TextEditingController();
   final TextEditingController passController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -47,72 +48,33 @@ class _LoginPageState extends State<LoginPage> {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 450),
-              // Adds a nice shadow and white background behind the form
               child: Card(
-                color: theme
-                    .colorScheme
-                    .surface, // Use surface color for the card background
-                elevation: 8, // float effect
+                color: theme.colorScheme.surface,
+                elevation: 8,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
-
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     vertical: 32.0,
                     horizontal: 24.0,
                   ),
-
-                  // EXISTING BLOC LOGIC STARTS HERE
                   child: BlocConsumer<AuthBloc, AuthState>(
-                    listener: (context, state) async {
-                      // ... (Keep your existing Listener logic) ...
+                    listener: (context, state) {
                       if (state is AuthFailure) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(state.message),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      } else if (state is AuthSuccess) {
-                        ScaffoldMessenger.of(context).clearSnackBars();
-
-                        // Optional: Show a quick snackbar so the user knows it's downloading
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Loading Dashboard..."),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-
-                        try {
-                          // 2. WAIT FOR THE DOWNLOAD TO FINISH
-                          await home_page.loadLibrary();
-
-                          // 3. NAVIGATE ONLY AFTER DOWNLOAD IS DONE
-                          if (context.mounted) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    home_page.HomePage(user: state.user),
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          // Fallback if the download fails (e.g., bad internet)
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  "Failed to load dashboard. Check connection.",
-                                ),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        }
+                        // Clear any previous snackbar before showing new error
+                        ScaffoldMessenger.of(context)
+                          ..clearSnackBars()
+                          ..showSnackBar(
+                            SnackBar(
+                              content: Text(state.message),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
                       }
+                      // AuthSuccess: no manual navigation.
+                      // GoRouterRefreshStream detects the state change and
+                      // the redirect() in app_router.dart sends user to /dashboard
                     },
                     builder: (context, state) {
                       if (state is AuthLoading) {
@@ -125,15 +87,14 @@ class _LoginPageState extends State<LoginPage> {
                       return Form(
                         key: _formKey,
                         child: Column(
-                          mainAxisSize:
-                              MainAxisSize.min, // Shrink to fit content
+                          mainAxisSize: MainAxisSize.min,
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Center(
                               child: SizedBox(
-                                height: 100, // Adjust height as needed
-                                width: 200, // Adjust width as needed
+                                height: 100,
+                                width: 200,
                                 child: Image.asset(
                                   'assets/images/logoSdc.png',
                                   fit: BoxFit.contain,
@@ -220,11 +181,10 @@ class _LoginPageState extends State<LoginPage> {
                             // --- Login Button ---
                             ElevatedButton(
                               onPressed: _submitLogin,
-
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 20,
-                                ), // Taller button
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../auth/domain/entities/user_entity.dart';
+import '../../data/datasources/config_data_source.dart';
 import '../../data/repositories/config_repository_impl.dart';
 import '../../domain/usecases/get_thresholds_usecase.dart';
 import '../../domain/usecases/get_contacts_usecase.dart';
@@ -12,27 +15,47 @@ import '../bloc/config_event.dart';
 import '../bloc/config_state.dart';
 import '../../../home/presentation/widgets/main_layout.dart';
 
-class ConfigPage extends StatelessWidget {
+class ConfigPage extends StatefulWidget {
   final UserEntity user;
   const ConfigPage({super.key, required this.user});
 
   @override
-  Widget build(BuildContext context) {
-    // Read from app-level DI — no local construction needed
-    final repo = context.read<ConfigRepositoryImpl>();
+  State<ConfigPage> createState() => _ConfigPageState();
+}
 
+class _ConfigPageState extends State<ConfigPage> {
+  late final ConfigRepositoryImpl _configRepo;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Safe to context.read here — widget is fully mounted
+    final httpClient = context.read<http.Client>();
+    final sharedPrefs = context.read<SharedPreferences>();
+
+    _configRepo = ConfigRepositoryImpl(
+      remoteDataSource: ConfigRemoteDataSourceImpl(
+        client: httpClient,
+        sharedPreferences: sharedPrefs,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => ConfigBloc(
-        getThresholdsUseCase: GetThresholdsUseCase(repo),
-        updateThresholdsUseCase: UpdateThresholdsUseCase(repo),
-        getContactsUseCase: GetContactsUseCase(repo),
-        addEmailUseCase: AddEmailUseCase(repo),
-        removeEmailUseCase: RemoveEmailUseCase(repo),
-        addPhoneUseCase: AddPhoneUseCase(repo),
-        removePhoneUseCase: RemovePhoneUseCase(repo),
+        getThresholdsUseCase: GetThresholdsUseCase(_configRepo),
+        updateThresholdsUseCase: UpdateThresholdsUseCase(_configRepo),
+        getContactsUseCase: GetContactsUseCase(_configRepo),
+        addEmailUseCase: AddEmailUseCase(_configRepo),
+        removeEmailUseCase: RemoveEmailUseCase(_configRepo),
+        addPhoneUseCase: AddPhoneUseCase(_configRepo),
+        removePhoneUseCase: RemovePhoneUseCase(_configRepo),
       )..add(ConfigInitialLoad()),
       child: MainLayout(
-        user: user,
+        user: widget.user,
         title: "System Configuration",
         body: BlocListener<ConfigBloc, ConfigState>(
           listener: (context, state) {
@@ -62,6 +85,7 @@ class ConfigPage extends StatelessWidget {
   }
 }
 
+// _ConfigForm and _ConfigFormState are UNCHANGED — paste your existing code below this line
 class _ConfigForm extends StatefulWidget {
   const _ConfigForm();
 
@@ -70,13 +94,10 @@ class _ConfigForm extends StatefulWidget {
 }
 
 class _ConfigFormState extends State<_ConfigForm> {
-  // Threshold controllers
   final _subTempCtrl = TextEditingController();
   final _thresTempCtrl = TextEditingController();
   final _subHumCtrl = TextEditingController();
   final _thresHumCtrl = TextEditingController();
-
-  // Contact input controllers (for ADDING new entries only)
   final _emailInputCtrl = TextEditingController();
   final _phoneInputCtrl = TextEditingController();
 
@@ -95,7 +116,6 @@ class _ConfigFormState extends State<_ConfigForm> {
     super.dispose();
   }
 
-  // --- VALIDATORS ---
   String? _validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) return 'Email is required';
     final emailRegex = RegExp(
@@ -110,7 +130,6 @@ class _ConfigFormState extends State<_ConfigForm> {
   String? _validatePhone(String? value) {
     if (value == null || value.trim().isEmpty)
       return 'Phone number is required';
-    // Strip all non-digits and check for exactly 10
     final digitsOnly = value.trim().replaceAll(RegExp(r'\D'), '');
     if (digitsOnly.length != 10)
       return 'Enter exactly 10 digits (e.g. 9876543210)';
@@ -124,14 +143,12 @@ class _ConfigFormState extends State<_ConfigForm> {
 
     return BlocListener<ConfigBloc, ConfigState>(
       listener: (context, state) {
-        // Auto-fill threshold fields when data loads
         if (state is ConfigLoaded) {
           _subTempCtrl.text = state.thresholds.subTemp.toString();
           _thresTempCtrl.text = state.thresholds.thresTemp.toString();
           _subHumCtrl.text = state.thresholds.subHum.toString();
           _thresHumCtrl.text = state.thresholds.thresHum.toString();
         }
-        // Clear input fields after a successful add
         if (state is ConfigSuccess) {
           _emailInputCtrl.clear();
           _phoneInputCtrl.clear();
@@ -140,9 +157,6 @@ class _ConfigFormState extends State<_ConfigForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // =========================================================
-          // SECTION 1: THRESHOLDS (unchanged logic)
-          // =========================================================
           const Text(
             "Sensor Thresholds",
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -255,9 +269,6 @@ class _ConfigFormState extends State<_ConfigForm> {
           const Divider(),
           const SizedBox(height: 40),
 
-          // =========================================================
-          // SECTION 2: ALERT CONTACTS (fully rebuilt)
-          // =========================================================
           const Text(
             "Alert Contacts",
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -269,7 +280,6 @@ class _ConfigFormState extends State<_ConfigForm> {
           ),
           const SizedBox(height: 20),
 
-          // BlocBuilder drives the contacts card so chips update reactively
           BlocBuilder<ConfigBloc, ConfigState>(
             builder: (context, state) {
               final isLoading = state is ConfigLoading;
@@ -281,16 +291,13 @@ class _ConfigFormState extends State<_ConfigForm> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Thin progress bar — visible only during API calls
                       if (isLoading)
                         const Padding(
                           padding: EdgeInsets.only(bottom: 20),
                           child: LinearProgressIndicator(),
                         ),
 
-                      // -----------------------------------------
                       // EMAIL SUB-SECTION
-                      // -----------------------------------------
                       Row(
                         children: [
                           Icon(
@@ -307,7 +314,6 @@ class _ConfigFormState extends State<_ConfigForm> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Existing email chips
                       if (contacts != null && contacts.emails.isNotEmpty)
                         Wrap(
                           spacing: 8,
@@ -315,7 +321,6 @@ class _ConfigFormState extends State<_ConfigForm> {
                           children: contacts.emails.map((email) {
                             return InputChip(
                               label: Text(email),
-                              // onDeleted = null hides the X during loading (clean behaviour)
                               onDeleted: isLoading
                                   ? null
                                   : () => context.read<ConfigBloc>().add(
@@ -346,7 +351,6 @@ class _ConfigFormState extends State<_ConfigForm> {
 
                       const SizedBox(height: 16),
 
-                      // Add email row
                       Form(
                         key: _emailFormKey,
                         child: Row(
@@ -368,7 +372,6 @@ class _ConfigFormState extends State<_ConfigForm> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            // Top-align button with the text field
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: ElevatedButton.icon(
@@ -413,9 +416,7 @@ class _ConfigFormState extends State<_ConfigForm> {
                       const Divider(),
                       const SizedBox(height: 24),
 
-                      // -----------------------------------------
                       // PHONE SUB-SECTION
-                      // -----------------------------------------
                       Row(
                         children: [
                           Icon(
@@ -432,7 +433,6 @@ class _ConfigFormState extends State<_ConfigForm> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Existing phone chips
                       if (contacts != null && contacts.phoneNumbers.isNotEmpty)
                         Wrap(
                           spacing: 8,
@@ -470,7 +470,6 @@ class _ConfigFormState extends State<_ConfigForm> {
 
                       const SizedBox(height: 16),
 
-                      // Add phone row
                       Form(
                         key: _phoneFormKey,
                         child: Row(
@@ -485,7 +484,7 @@ class _ConfigFormState extends State<_ConfigForm> {
                                 decoration: const InputDecoration(
                                   labelText: "New Phone Number",
                                   hintText:
-                                      " 1234567890 (10 digits without +91)",
+                                      "1234567890 (10 digits without +91)",
                                   hintStyle: TextStyle(color: Colors.white38),
                                   prefixIcon: Icon(Icons.phone_iphone),
                                 ),

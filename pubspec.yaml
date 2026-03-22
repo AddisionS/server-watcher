@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   http: ^1.2.0
+  go_router: ^14.0.0 
   file_saver: ^0.3.1
   intl: ^0.20.2
   syncfusion_flutter_gauges: ^32.1.23
