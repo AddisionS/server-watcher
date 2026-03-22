@@ -98211,7 +98211,7 @@ r=s.length!==0?B.b.gaq(s).b:0
 q=s.length!==0?B.b.gaq(s).c:0
 p=b.c
 o=t.p
-n=A.b([B.Bj,B.j5,B.H7,B.bA,A.vz(new A.bq(B.Ig,A.dA(A.b([A.aOM(50,p.a,p.b,k,"\xb0C",A.qd(B.d.ah(r,1))),A.aOM(100,p.c,p.d,j,"%",A.qd(B.d.ah(q,1)))],o),B.N,B.lz,B.B,0),l),l,l,l,l),B.AI],o)
+n=A.b([B.Bj,B.j5,B.H7,B.bA,A.vz(new A.bq(B.Ig,A.dA(A.b([A.aOM(100,p.a,p.b,k,"\xb0C",A.qd(B.d.ah(r,1))),A.aOM(100,p.c,p.d,j,"%",A.qd(B.d.ah(q,1)))],o),B.N,B.lz,B.B,0),l),l,l,l,l),B.AI],o)
 m=this.b.ax
 if(this.a)n.push(new A.qs(3.5,A.dA(A.b([A.dd(new A.k2(k,s,!0,m.fy,l),1),B.TB,A.dd(new A.k2(j,s,!1,m.b,l),1)],o),B.N,B.v,B.B,0),l))
 else n.push(A.cM(A.b([new A.qs(2,new A.k2(k,s,!0,m.fy,l),l),B.bA,new A.qs(2,new A.k2(j,s,!1,m.b,l),l)],o),B.N,B.v,B.B))

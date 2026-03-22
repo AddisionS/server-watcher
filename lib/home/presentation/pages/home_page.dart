@@ -157,7 +157,7 @@ class HomeContent extends StatelessWidget {
                           title: "Temperature",
                           value: double.parse(latestTemp.toStringAsFixed(1)),
                           unit: "°C",
-                          axisMax: 50,
+                          axisMax: 100,
                           subThreshold: thresholds.subTemp,
                           threshold: thresholds.thresTemp,
                         ),
