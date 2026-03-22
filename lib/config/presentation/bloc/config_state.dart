@@ -8,11 +8,13 @@ class ConfigLoading extends ConfigState {}
 
 class ConfigLoaded extends ConfigState {
   final ThresholdsEntity thresholds;
-  ConfigLoaded(this.thresholds);
+  final ContactEntity contacts; // ADD THIS
+
+  ConfigLoaded({required this.thresholds, required this.contacts});
 }
 
 class ConfigSuccess extends ConfigState {
-  final String message; // "Thresholds Saved" or "Contacts Saved"
+  final String message;
   ConfigSuccess(this.message);
 }
 

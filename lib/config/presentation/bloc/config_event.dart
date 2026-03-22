@@ -12,8 +12,23 @@ class SubmitThresholds extends ConfigEvent {
   });
 }
 
-class SubmitContacts extends ConfigEvent {
-  final String emailsString; // Raw string from text field
-  final String phonesString; // Raw string from text field
-  SubmitContacts({required this.emailsString, required this.phonesString});
+// --- NEW CONTACT EVENTS ---
+class AddEmailEvent extends ConfigEvent {
+  final String email;
+  AddEmailEvent(this.email);
+}
+
+class RemoveEmailEvent extends ConfigEvent {
+  final String email;
+  RemoveEmailEvent(this.email);
+}
+
+class AddPhoneEvent extends ConfigEvent {
+  final String phone;
+  AddPhoneEvent(this.phone);
+}
+
+class RemovePhoneEvent extends ConfigEvent {
+  final String phone;
+  RemovePhoneEvent(this.phone);
 }

@@ -2,30 +2,51 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/config_entities.dart';
 import '../../domain/usecases/update_config_usecase.dart';
 import '../../domain/usecases/get_thresholds_usecase.dart';
+import '../../domain/usecases/get_contacts_usecase.dart'; // IMPORT THIS
 import 'config_event.dart';
 import 'config_state.dart';
 
 class ConfigBloc extends Bloc<ConfigEvent, ConfigState> {
   final UpdateThresholdsUseCase updateThresholdsUseCase;
-  final UpdateContactsUseCase updateContactsUseCase;
   final GetThresholdsUseCase getThresholdsUseCase;
+
+  // NEW USECASES
+  final GetContactsUseCase getContactsUseCase;
+  final AddEmailUseCase addEmailUseCase;
+  final RemoveEmailUseCase removeEmailUseCase;
+  final AddPhoneUseCase addPhoneUseCase;
+  final RemovePhoneUseCase removePhoneUseCase;
 
   ConfigBloc({
     required this.updateThresholdsUseCase,
-    required this.updateContactsUseCase,
     required this.getThresholdsUseCase,
+    required this.getContactsUseCase,
+    required this.addEmailUseCase,
+    required this.removeEmailUseCase,
+    required this.addPhoneUseCase,
+    required this.removePhoneUseCase,
   }) : super(ConfigInitial()) {
-    //intial loading of threshold values for display in text fields
+    // --- LOAD ALL DATA ---
     on<ConfigInitialLoad>((event, emit) async {
       emit(ConfigLoading());
       try {
-        final thresholds = await getThresholdsUseCase.call();
-        emit(ConfigLoaded(thresholds));
+        // Fetch both simultaneously for speed
+        final results = await Future.wait([
+          getThresholdsUseCase.call(),
+          getContactsUseCase.call(),
+        ]);
+        emit(
+          ConfigLoaded(
+            thresholds: results[0] as ThresholdsEntity,
+            contacts: results[1] as ContactEntity,
+          ),
+        );
       } catch (e) {
-        emit(ConfigFailure("Failed to load thresholds"));
+        emit(ConfigFailure("Failed to load configuration"));
       }
     });
-    // Handle Thresholds Submission
+
+    // --- THRESHOLDS ---
     on<SubmitThresholds>((event, emit) async {
       emit(ConfigLoading());
       try {
@@ -36,37 +57,61 @@ class ConfigBloc extends Bloc<ConfigEvent, ConfigState> {
           thresHum: event.thresHum,
         );
         await updateThresholdsUseCase.call(entity);
-        add(ConfigInitialLoad()); // Reload updated thresholds
         emit(ConfigSuccess("Thresholds updated successfully!"));
+        add(ConfigInitialLoad()); // Reload everything
       } catch (e) {
         emit(ConfigFailure("Failed to update thresholds"));
+        add(ConfigInitialLoad());
       }
     });
 
-    // Handle Contacts Submission
-    on<SubmitContacts>((event, emit) async {
+    // --- EMAILS ---
+    on<AddEmailEvent>((event, emit) async {
       emit(ConfigLoading());
       try {
-        // Parse the comma-separated strings into Lists
-        final emails = event.emailsString
-            .split(',')
-            .map((e) => e.trim())
-            .toList();
-        final phones = event.phonesString
-            .split(',')
-            .map((e) => e.trim())
-            .toList();
-
-        // Basic validation: remove empty strings
-        emails.removeWhere((e) => e.isEmpty);
-        phones.removeWhere((p) => p.isEmpty);
-
-        final entity = ContactEntity(emails: emails, phoneNumbers: phones);
-        await updateContactsUseCase.call(entity);
-
-        emit(ConfigSuccess("Alert contacts updated successfully!"));
+        await addEmailUseCase.call(event.email);
+        emit(ConfigSuccess("Email added"));
+        add(ConfigInitialLoad());
       } catch (e) {
-        emit(ConfigFailure("Failed to update contacts"));
+        emit(ConfigFailure("Failed to add email"));
+        add(ConfigInitialLoad());
+      }
+    });
+
+    on<RemoveEmailEvent>((event, emit) async {
+      emit(ConfigLoading());
+      try {
+        await removeEmailUseCase.call(event.email);
+        emit(ConfigSuccess("Email removed"));
+        add(ConfigInitialLoad());
+      } catch (e) {
+        emit(ConfigFailure("Failed to remove email"));
+        add(ConfigInitialLoad());
+      }
+    });
+
+    // --- PHONES ---
+    on<AddPhoneEvent>((event, emit) async {
+      emit(ConfigLoading());
+      try {
+        await addPhoneUseCase.call(event.phone);
+        emit(ConfigSuccess("Phone number added"));
+        add(ConfigInitialLoad());
+      } catch (e) {
+        emit(ConfigFailure("Failed to add phone"));
+        add(ConfigInitialLoad());
+      }
+    });
+
+    on<RemovePhoneEvent>((event, emit) async {
+      emit(ConfigLoading());
+      try {
+        await removePhoneUseCase.call(event.phone);
+        emit(ConfigSuccess("Phone number removed"));
+        add(ConfigInitialLoad());
+      } catch (e) {
+        emit(ConfigFailure("Failed to remove phone"));
+        add(ConfigInitialLoad());
       }
     });
   }

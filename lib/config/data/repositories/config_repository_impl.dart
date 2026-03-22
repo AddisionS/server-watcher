@@ -1,6 +1,6 @@
 import '../../domain/entities/config_entities.dart';
 import '../../domain/repositories/config_repository.dart';
-import '../datasources/config_mock_data_source.dart';
+import '../datasources/config_data_source.dart';
 
 class ConfigRepositoryImpl implements ConfigRepository {
   final ConfigRemoteDataSource remoteDataSource;
@@ -8,17 +8,25 @@ class ConfigRepositoryImpl implements ConfigRepository {
   ConfigRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<void> updateThresholds(ThresholdsEntity thresholds) async {
-    await remoteDataSource.postThresholds(thresholds);
-  }
+  Future<ThresholdsEntity> getThresholds() =>
+      remoteDataSource.fetchThresholds();
 
   @override
-  Future<void> updateContacts(ContactEntity contacts) async {
-    await remoteDataSource.postContacts(contacts);
-  }
+  Future<void> updateThresholds(ThresholdsEntity thresholds) =>
+      remoteDataSource.postThresholds(thresholds);
 
   @override
-  Future<ThresholdsEntity> getThresholds() async {
-    return await remoteDataSource.fetchThresholds();
-  }
+  Future<ContactEntity> getContacts() => remoteDataSource.fetchContacts();
+
+  @override
+  Future<void> addEmail(String email) => remoteDataSource.addEmail(email);
+
+  @override
+  Future<void> removeEmail(String email) => remoteDataSource.removeEmail(email);
+
+  @override
+  Future<void> addPhone(String phone) => remoteDataSource.addPhone(phone);
+
+  @override
+  Future<void> removePhone(String phone) => remoteDataSource.removePhone(phone);
 }

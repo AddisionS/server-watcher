@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serverwatcher/config/domain/usecases/get_thresholds_usecase.dart';
+import '../../domain/usecases/get_contacts_usecase.dart';
 
 // Domain & Data Imports
 import '../../../auth/domain/entities/user_entity.dart';
-import '../../data/datasources/config_mock_data_source.dart';
+import '../../data/datasources/config_data_source.dart';
 import '../../data/repositories/config_repository_impl.dart';
 import '../../domain/usecases/update_config_usecase.dart';
 
@@ -14,7 +15,7 @@ import '../bloc/config_event.dart';
 import '../bloc/config_state.dart';
 
 // Layout Import
-import '../../../home/presentation/widgets/main_layout.dart'; // <--- IMPORT THIS
+import '../../../home/presentation/widgets/main_layout.dart';
 
 class ConfigPage extends StatelessWidget {
   final UserEntity user;
@@ -24,14 +25,18 @@ class ConfigPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 1. Dependency Injection
-    final dataSource = ConfigMockDataSourceImpl();
+    final dataSource = ConfigRemoteDataSourceImpl();
     final repo = ConfigRepositoryImpl(remoteDataSource: dataSource);
 
     return BlocProvider(
       create: (context) => ConfigBloc(
         getThresholdsUseCase: GetThresholdsUseCase(repo),
         updateThresholdsUseCase: UpdateThresholdsUseCase(repo),
-        updateContactsUseCase: UpdateContactsUseCase(repo),
+        getContactsUseCase: GetContactsUseCase(repo),
+        addEmailUseCase: AddEmailUseCase(repo),
+        removeEmailUseCase: RemoveEmailUseCase(repo),
+        addPhoneUseCase: AddPhoneUseCase(repo),
+        removePhoneUseCase: RemovePhoneUseCase(repo),
       )..add(ConfigInitialLoad()),
 
       // 2. USE MAIN LAYOUT (Cleaner Structure)
