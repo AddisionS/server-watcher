@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.core.model import EmailPayload, PhonePayload
+from app.models.contacts import EmailPayload, PhonePayload
 
 from app.services.alert_contact_service import (
     load_alert_contacts,
