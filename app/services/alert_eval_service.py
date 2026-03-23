@@ -1,4 +1,4 @@
-from app.core.threshold_cache import THRESHOLDS
+import app.core.threshold_cache as threshold_cache
 from app.services.alert_dispatch_service import dispatch_alert
 from app.services.device_db_service import get_device_name
 from app.core.logger import logger
@@ -11,27 +11,27 @@ def evaluate_and_log_alert(
     temperature: float,
     humidity: float,
 ) -> None:
-    if THRESHOLDS is None:
+    if threshold_cache.THRESHOLDS is None:
         return
 
     breached = False
     logger.info("Value within threshold, no alert sent")
 
     if (
-        temperature < THRESHOLDS["temp_min"]
-        or temperature > THRESHOLDS["temp_max"]
+        temperature < threshold_cache.THRESHOLDS["temp_min"]
+        or temperature > threshold_cache.THRESHOLDS["temp_max"]
     ):
         breached = True
 
     if (
-        humidity < THRESHOLDS["humidity_min"]
-        or humidity > THRESHOLDS["humidity_max"]
+        humidity < threshold_cache.THRESHOLDS["humidity_min"]
+        or humidity > threshold_cache.THRESHOLDS["humidity_max"]
     ):
         breached = True
         logger.info("Threshold exceeded — sending alert email")
 
     if breached:
-        device_name= get_device_name(device_id=device_id)
+        device_name = get_device_name(device_id=device_id)
         if device_name is None:
             logger.warning(
                 "Device not found in database",
