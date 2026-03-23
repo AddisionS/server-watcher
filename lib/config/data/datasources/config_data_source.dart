@@ -93,39 +93,45 @@ class ConfigRemoteDataSourceImpl implements ConfigRemoteDataSource {
 
   @override
   Future<void> addEmail(String email) async {
-    // FastAPI expects: POST /admin/alerts/emails?email=test@test.com
-    final url = Uri.parse(
-      '${AppConfig.baseUrl}/admin/alerts/emails',
-    ).replace(queryParameters: {'email': email});
-    final response = await client.post(url, headers: _getHeaders());
+    final url = Uri.parse('${AppConfig.baseUrl}/admin/alerts/emails');
+    final response = await client.post(
+      url,
+      headers: _getHeaders(),
+      body: json.encode({'email': email}),
+    );
     if (response.statusCode != 200) throw Exception('Failed to add email');
   }
 
   @override
   Future<void> removeEmail(String email) async {
-    // FastAPI expects: DELETE /admin/alerts/emails?email=test@test.com
-    final url = Uri.parse(
-      '${AppConfig.baseUrl}/admin/alerts/emails',
-    ).replace(queryParameters: {'email': email});
-    final response = await client.delete(url, headers: _getHeaders());
+    final url = Uri.parse('${AppConfig.baseUrl}/admin/alerts/emails');
+    final response = await client.delete(
+      url,
+      headers: _getHeaders(),
+      body: json.encode({'email': email}),
+    );
     if (response.statusCode != 200) throw Exception('Failed to remove email');
   }
 
   @override
   Future<void> addPhone(String phone) async {
-    final url = Uri.parse(
-      '${AppConfig.baseUrl}/admin/alerts/phones',
-    ).replace(queryParameters: {'phone': phone});
-    final response = await client.post(url, headers: _getHeaders());
+    final url = Uri.parse('${AppConfig.baseUrl}/admin/alerts/phones');
+    final response = await client.post(
+      url,
+      headers: _getHeaders(),
+      body: json.encode({'phone': phone}),
+    );
     if (response.statusCode != 200) throw Exception('Failed to add phone');
   }
 
   @override
   Future<void> removePhone(String phone) async {
-    final url = Uri.parse(
-      '${AppConfig.baseUrl}/admin/alerts/phones',
-    ).replace(queryParameters: {'phone': phone});
-    final response = await client.delete(url, headers: _getHeaders());
+    final url = Uri.parse('${AppConfig.baseUrl}/admin/alerts/phones');
+    final response = await client.delete(
+      url,
+      headers: _getHeaders(),
+      body: json.encode({'phone': phone}),
+    );
     if (response.statusCode != 200) throw Exception('Failed to remove phone');
   }
 }
