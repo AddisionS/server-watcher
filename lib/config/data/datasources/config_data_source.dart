@@ -99,7 +99,9 @@ class ConfigRemoteDataSourceImpl implements ConfigRemoteDataSource {
       headers: _getHeaders(),
       body: json.encode({'email': email}),
     );
-    if (response.statusCode != 200) throw Exception('Failed to add email');
+    if (response.statusCode != 200) {
+      throw Exception('Failed to add email: ${response.body}');
+    }
   }
 
   @override
@@ -110,7 +112,9 @@ class ConfigRemoteDataSourceImpl implements ConfigRemoteDataSource {
       headers: _getHeaders(),
       body: json.encode({'email': email}),
     );
-    if (response.statusCode != 200) throw Exception('Failed to remove email');
+    if (response.statusCode != 200) {
+      throw Exception('Failed to remove email: ${response.body}');
+    }
   }
 
   @override
@@ -121,7 +125,9 @@ class ConfigRemoteDataSourceImpl implements ConfigRemoteDataSource {
       headers: _getHeaders(),
       body: json.encode({'phone': phone}),
     );
-    if (response.statusCode != 200) throw Exception('Failed to add phone');
+    if (response.statusCode != 200) {
+      throw Exception('Failed to add phone: ${response.body}');
+    }
   }
 
   @override
@@ -132,6 +138,8 @@ class ConfigRemoteDataSourceImpl implements ConfigRemoteDataSource {
       headers: _getHeaders(),
       body: json.encode({'phone': phone}),
     );
-    if (response.statusCode != 200) throw Exception('Failed to remove phone');
+    if (response.statusCode != 200) {
+      throw Exception('Failed to remove phone: ${response.body}');
+    }
   }
 }
