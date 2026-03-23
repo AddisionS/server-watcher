@@ -15,6 +15,7 @@ def evaluate_and_log_alert(
         return
 
     breached = False
+    logger.info("Value within threshold, no alert sent")
 
     if (
         temperature < THRESHOLDS["temp_min"]
@@ -27,6 +28,7 @@ def evaluate_and_log_alert(
         or humidity > THRESHOLDS["humidity_max"]
     ):
         breached = True
+        logger.info("Threshold exceeded — sending alert email")
 
     if breached:
         device_name= get_device_name(device_id=device_id)

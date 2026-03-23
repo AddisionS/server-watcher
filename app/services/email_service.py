@@ -13,6 +13,7 @@ from app.core.logger import logger
 
 def send_email(subject: str, body: str) -> None:
     if not ALERT_EMAILS:
+        logger.warning("send_email called but ALERT_EMAILS is empty — skipping")
         return
 
     msg = EmailMessage()
