@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 from app.services.email_service import send_email
 from app.services.whatsapp_service import send_whatsapp_alert
@@ -14,7 +15,7 @@ def dispatch_alert(
 ) -> None:
     device_name = device_name or "Unknown location"
 
-    ts = datetime.now(timezone.utc)
+    ts = datetime.now(ZoneInfo("Asia/Kolkata"))
 
     temperature_str = f"{temperature:.1f} °C"
     humidity_str = f"{humidity:.1f} %"
