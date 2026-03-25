@@ -1,4 +1,4 @@
-import app.core.threshold_cache as threshold_cache
+import app.cache.threshold_cache as threshold_cache
 from app.services.alert_dispatch_service import dispatch_alert
 from app.services.device_db_service import get_device_name
 from app.core.logger import logger

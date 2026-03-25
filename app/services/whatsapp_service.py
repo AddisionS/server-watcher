@@ -6,7 +6,7 @@ from app.core.config import (
     GUPSHUP_SOURCE,
     GUPSHUP_TEMPLATE_NAME,
 )
-from app.core.alert_cache import ALERT_PHONES
+from app.cache.alert_cache import ALERT_PHONES
 from app.core.logger import logger
 
 

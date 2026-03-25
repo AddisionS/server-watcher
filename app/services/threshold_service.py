@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from app.db.sqlite import get_connection
-import app.core.threshold_cache as threshold_cache
+import app.cache.threshold_cache as threshold_cache
 
 
 def load_thresholds() -> None:

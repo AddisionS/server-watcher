@@ -8,7 +8,7 @@ from app.core.config import (
     SMTP_PASSWORD,
     SMTP_FROM,
 )
-from app.core.alert_cache import ALERT_EMAILS
+from app.cache.alert_cache import ALERT_EMAILS
 from app.core.logger import logger
 
 def send_email(subject: str, body: str) -> None:

@@ -2,13 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.models.contacts import EmailPayload, PhonePayload
 
 from app.services.alert_contact_service import (
-    load_alert_contacts,
     add_alert_email,
     remove_alert_email,
     add_alert_phone,
     remove_alert_phone,
 )
-from app.core.alert_cache import ALERT_EMAILS, ALERT_PHONES
+from app.cache.alert_cache import ALERT_EMAILS, ALERT_PHONES
 from app.core.deps import require_role
 from app.core.roles import Role
 

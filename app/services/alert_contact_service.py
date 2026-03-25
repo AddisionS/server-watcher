@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 import sqlite3
 
 from app.db.sqlite import get_connection
-from app.core.alert_cache import ALERT_EMAILS, ALERT_PHONES
+from app.cache.alert_cache import ALERT_EMAILS, ALERT_PHONES
 from app.core.logger import logger
 
 
