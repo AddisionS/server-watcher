@@ -8,6 +8,8 @@ from app.services.alert_contact_service import load_alert_contacts
 from app.services.account_bootstrap_service import bootstrap_user, bootstrap_admin, bootstrap_dev
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.influx import client
+from app.services.device_state_service import sync_device_cache, liveness_loop
+import threading
 
 
 @asynccontextmanager
@@ -19,6 +21,9 @@ async def lifespan(app: FastAPI):
     bootstrap_dev()
     load_thresholds()
     load_alert_contacts()
+    sync_device_cache()
+    thread = threading.Thread(target=liveness_loop, daemon=True)
+    thread.start()
     yield
 
     client.close()

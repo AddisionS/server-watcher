@@ -8,7 +8,8 @@ class DeviceState:
         uptime_sec: float,
         sensor_status: Literal["ok", "dead"],
         state: Literal["alive", "dead"],
-        alert_active: bool = False
+        alert_active: bool = False,
+        firmware_update: bool = False
     ):
         self.last_seen = last_seen
         self.firmware = firmware
@@ -16,6 +17,7 @@ class DeviceState:
         self.sensor_status = sensor_status
         self.state = state
         self.alert_active = alert_active
+        self.firmware_update = firmware_update
 
 class DeviceCache:
     def __init__(self):

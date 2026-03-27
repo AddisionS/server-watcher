@@ -7,6 +7,7 @@ from app.core.roles import Role
 from app.models.device import DeviceCreate, DeviceUpdate
 from app.services.device_id_service import generate_device_id
 from app.services.device_auth_token_service import generate_auth_token
+from app.services.device_state_service import add_to_device_cache, remove_from_device_cache
 from app.services.firmware_generation_service import generate_firmware
 
 router = APIRouter(
@@ -42,6 +43,8 @@ def remove_device(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device not found",
         )
+
+    remove_from_device_cache(device_id=device_id)
 
 @router.put("/", status_code=status.HTTP_204_NO_CONTENT)
 def rename_device(
@@ -83,6 +86,7 @@ def add_device_endpoint(
             device_name=data.device_name,
             auth_token=auth_token
         )
+        add_to_device_cache(device_id=device_id)
     except ValueError as e:
         raise HTTPException(
             status_code=409,
@@ -93,6 +97,6 @@ def add_device_endpoint(
         content=firmware,
         media_type="text/plain",
         headers={
-            "Content-Disposition": f'attachment; filename="{device_id}.ino"'
+            "Content-Disposition": f'attachment; filename="{data.device_name}_{device_id}.ino"'
         },
     )
