@@ -1,6 +1,6 @@
 # Server Watcher — Backend
 
-> FastAPI backend for **Server Watcher**, an IoT monitoring system that collects temperature and humidity data from ESP-based devices, evaluates alert thresholds, and dispatches notifications via Email and WhatsApp.
+> FastAPI backend for **Server Watcher**, an IoT monitoring system that collects temperature and humidity data from ESP-based devices, evaluates alert thresholds, and dispatches notifications via Email.
 
 ---
 
@@ -30,7 +30,7 @@ Server Watcher is designed to monitor physical environments (e.g., server rooms)
 - Receives sensor readings from registered ESP devices
 - Stores time-series metrics in **InfluxDB**
 - Evaluates readings against configurable thresholds
-- Fires **email** and **WhatsApp** alerts when thresholds are breached
+- Fires **email** alerts when thresholds are breached
 - Tracks real-time device liveness and firmware state in memory
 - Provides a REST API consumed by the frontend dashboard
 - Auto-generates pre-configured **Arduino firmware** (`.ino`) for new devices
@@ -59,11 +59,9 @@ ESP Device (Arduino/ESP32)
 │  In-memory Caches:              │
 │    DeviceCache  (liveness)      │
 │    THRESHOLDS                   │
-│    ALERT_EMAILS / ALERT_PHONES  │
+│    ALERT_EMAILS                 │
 │                                 │
 │  Alert Engine ──► Email (SMTP)  │
-│               └─► WhatsApp      │
-│                   (Gupshup API) │
 └─────────────────────────────────┘
         │
         │  REST API (JWT-protected)
@@ -82,7 +80,6 @@ ESP Device (Arduino/ESP32)
 | Relational DB | SQLite |
 | Auth | JWT (`python-jose`), bcrypt (`passlib`) |
 | Email | SMTP via `smtplib` (STARTTLS) |
-| WhatsApp | Gupshup API |
 | Config | `python-dotenv` |
 | Package manager | `uv` |
 
@@ -133,8 +130,8 @@ server-watcher-backend/
     │   └── user.py
     └── services/
         ├── account_bootstrap_service.py   # Seeds default users on startup
-        ├── alert_contact_service.py       # Load/add/remove emails & phones
-        ├── alert_dispatch_service.py      # Orchestrates email + WhatsApp sending
+        ├── alert_contact_service.py       # Load/add/remove alert emails
+        ├── alert_dispatch_service.py      # Dispatches email alerts on threshold breach
         ├── alert_eval_service.py          # Threshold breach evaluation
         ├── alert_read_service.py          # Query alert history from InfluxDB
         ├── device_auth_service.py         # Validates device_id + auth_token
@@ -179,7 +176,6 @@ ESP Device: POST /ingest
         → write alert to InfluxDB  (measurement: "alerts")
         → dispatch_alert():
             → send_email()     via SMTP to all ALERT_EMAILS
-            → send_whatsapp()  via Gupshup to all ALERT_PHONES
 ```
 
 ### 3. Device Heartbeat
@@ -354,9 +350,6 @@ Authenticated User: GET /metrics/latest/{device_id}
 | `GET` | `/admin/alerts/emails` | USER, ADMIN, DEVELOPER | List alert emails |
 | `POST` | `/admin/alerts/emails?email=` | ADMIN, DEVELOPER | Add alert email |
 | `DELETE` | `/admin/alerts/emails?email=` | ADMIN, DEVELOPER | Remove alert email |
-| `GET` | `/admin/alerts/phones` | USER, ADMIN, DEVELOPER | List alert phone numbers |
-| `POST` | `/admin/alerts/phones?phone=` | ADMIN, DEVELOPER | Add phone (E.164 format) |
-| `DELETE` | `/admin/alerts/phones?phone=` | ADMIN, DEVELOPER | Remove phone number |
 
 ---
 
@@ -411,10 +404,10 @@ Passwords are hashed with **bcrypt** (72-byte limit enforced).
 | `humidity_min` | REAL | 40.0 |
 | `humidity_max` | REAL | 70.0 |
 
-**`alert_emails`** / **`alert_phones`**
+**`alert_emails`**
 | Column | Type |
 |---|---|
-| `email` / `phone` | TEXT PK |
+| `email` | TEXT PK |
 | `created_at` | TEXT |
 
 ### InfluxDB (time-series data)
@@ -435,11 +428,9 @@ The alert pipeline is triggered on every ingest:
 
 1. **`alert_eval_service`** checks the in-memory `THRESHOLDS` cache. If temperature or humidity is outside the configured min/max range, a breach is recorded.
 2. The breach is written to the InfluxDB `alerts` measurement for historical querying.
-3. **`alert_dispatch_service`** fans out to two channels concurrently (errors are caught independently so one failure doesn't block the other):
-   - **Email** — sent via SMTP STARTTLS to all addresses in `ALERT_EMAILS`
-   - **WhatsApp** — sent via the [Gupshup](https://www.gupshup.io/) API to all numbers in `ALERT_PHONES`
+3. **`alert_dispatch_service`** sends an **Email** via SMTP STARTTLS to all addresses in `ALERT_EMAILS`.
 
-Both `ALERT_EMAILS` and `ALERT_PHONES` are in-memory sets loaded from SQLite at startup and kept in sync with write-through updates.
+`ALERT_EMAILS` is an in-memory set loaded from SQLite at startup and kept in sync with write-through updates.
 
 The alert notification format includes: Device ID, Device Name, Temperature, Humidity, and Timestamp.
 
@@ -528,11 +519,6 @@ SMTP_PORT=587
 SMTP_USERNAME=your@email.com
 SMTP_PASSWORD=your-smtp-password
 SMTP_FROM=alerts@example.com
-
-# WhatsApp (Gupshup)
-GUPSHUP_API_KEY=your-gupshup-api-key
-GUPSHUP_SOURCE=your-whatsapp-source-number
-GUPSHUP_TEMPLATE_NAME=your-template-name
 
 # Firmware
 SERVER_HOST=your-server-ip-or-domain
