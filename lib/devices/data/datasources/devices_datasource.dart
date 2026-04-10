@@ -105,6 +105,7 @@ class DevicesRemoteDataSourceImpl implements DevicesRemoteDataSource {
           final response = await client.get(url, headers: _getHeaders());
           if (response.statusCode == 200) {
             final Map<String, dynamic> body = json.decode(response.body);
+            print(body['state']);
             return MapEntry(
               id,
               DeviceStatusInfo(
