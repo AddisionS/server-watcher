@@ -6,7 +6,6 @@ import '../models/sensor_model.dart';
 import '../../../app_config.dart';
 
 abstract class HomeRemoteDataSource {
-  // We removed fetchRooms() as you requested
   Stream<SensorModel> getSensorStream(String deviceId);
 }
 
@@ -28,13 +27,11 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
   @override
   Stream<SensorModel> getSensorStream(String deviceId) {
-    // 1. Create a Controller
     late StreamController<SensorModel> controller;
-    bool isActive = true; // The Kill Switch flag
+    bool isActive = true;
 
     controller = StreamController<SensorModel>(
       onListen: () async {
-        // Start the loop ONLY when someone listens
         while (isActive) {
           try {
             final url = Uri.parse(
@@ -42,7 +39,6 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
             );
             final response = await client.get(url, headers: _getHeaders());
 
-            // Check flag again after await (Crucial!)
             if (!isActive) break;
 
             if (response.statusCode == 200) {

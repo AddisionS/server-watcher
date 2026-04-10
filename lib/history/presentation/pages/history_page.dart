@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart' as http;
 
 // Domain & Data Imports
 import '../../../../auth/domain/entities/user_entity.dart';
-import '../../data/datasources/history_mock_data_source.dart';
+import '../../data/datasources/history_data_source.dart';
 import '../../data/repositories/history_repository_impl.dart';
 import '../../domain/usecases/get_history_usecase.dart';
 
@@ -26,8 +27,12 @@ class HistoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final httpClient = context.read<http.Client>();
     // 1. Dependency Injection (Only History needed now)
-    final historyDataSource = HistoryMockDataSourceImpl();
+    final historyDataSource = HistoryRemoteDataSourceImpl(
+      client: httpClient,
+      sharedPreferences: context.read(),
+    );
     final historyRepo = HistoryRepositoryImpl(
       remoteDataSource: historyDataSource,
     );
@@ -108,6 +113,12 @@ class _HistoryContent extends StatelessWidget {
                 return Center(child: Text(state.message));
 
               if (state is HistoryLoaded) {
+                if (state.historyData.isEmpty) {
+                  return const Center(
+                    child: Text("No data entries found for this device."),
+                  );
+                }
+
                 final graphData = state.historyData.reversed.toList();
 
                 return Column(

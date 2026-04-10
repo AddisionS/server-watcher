@@ -13,7 +13,7 @@ import '../../../config/data/repositories/config_repository_impl.dart';
 import '../../../config/domain/usecases/get_thresholds_usecase.dart';
 
 // Export Feature Imports
-import '../../../export/data/datasources/export_mock_data_source.dart';
+import '../../../export/data/datasources/export_data_source.dart';
 import '../../../export/data/repositories/export_repository_impl.dart';
 import '../../../export/domain/usecases/download_report_usecase.dart';
 import '../../../export/presentation/bloc/export_bloc.dart';
@@ -69,7 +69,11 @@ class _HomePageState extends State<HomePage> {
       ),
     );
 
-    _exportRepo = ExportRepositoryImpl(ExportMockDataSourceImpl());
+    _exportRepo = ExportRepositoryImpl(
+      ExportDataSourceImpl(
+        httpClient,
+      ),
+    );
   }
 
   @override
@@ -228,7 +232,15 @@ class HomeContent extends StatelessWidget {
                   ),
 
                 const SizedBox(height: 30),
-                ExportSection(currentRoom: state.selectedDeviceId),
+                ExportSection(
+                  currentRoom: (context.read<DevicesBloc>().state
+                          is DevicesLoaded)
+                      ? (context.read<DevicesBloc>().state as DevicesLoaded)
+                              .selectedDevice
+                              ?.roomName ??
+                          ""
+                      : "",
+                ),
                 const SizedBox(height: 40),
               ],
             ),

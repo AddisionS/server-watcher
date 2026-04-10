@@ -1,6 +1,7 @@
 import '../entities/device_entity.dart';
 import '../repositories/devices_repository.dart';
 import '../entities/device_file_result.dart';
+import '../entities/device_status_info.dart';
 
 class GetDevicesUseCase {
   final DevicesRepository repo;
@@ -25,4 +26,11 @@ class RemoveDeviceUseCase {
   final DevicesRepository repo;
   RemoveDeviceUseCase(this.repo);
   Future<void> call(String id) => repo.removeDevice(id);
+}
+
+class RefreshDeviceStatusesUseCase {
+  final DevicesRepository repo;
+  RefreshDeviceStatusesUseCase(this.repo);
+  Future<Map<String, DeviceStatusInfo>> call(List<String> ids) =>
+      repo.refreshStatuses(ids);
 }

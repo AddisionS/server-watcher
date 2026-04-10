@@ -66,8 +66,32 @@ class _DeviceManagerPageState extends State<DeviceManagerPage> {
           }
         },
         builder: (context, state) {
-          if (state is! DevicesLoaded) {
+          if (state is DevicesLoading) {
             return const Center(child: CircularProgressIndicator());
+          }
+          if (state is DevicesError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(
+                    state.message,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () =>
+                        context.read<DevicesBloc>().add(LoadDevices()),
+                    child: const Text("Retry"),
+                  ),
+                ],
+              ),
+            );
+          }
+          if (state is! DevicesLoaded) {
+            return const SizedBox.shrink();
           }
 
           if (state.devices.isEmpty) {
@@ -144,6 +168,17 @@ class _DeviceManagerPageState extends State<DeviceManagerPage> {
                                 style: const TextStyle(fontSize: 18),
                               ),
                               leading: const Icon(Icons.qr_code),
+                            ),
+                            const SizedBox(height: 8),
+
+                            // Firmware Version (Read-only)
+                            ListTile(
+                              title: const Text("Firmware Version"),
+                              subtitle: Text(
+                                state.deviceStatuses[selectedDevice.id]?.firmware ?? '—',
+                                style: const TextStyle(fontSize: 18),
+                              ),
+                              leading: const Icon(Icons.memory),
                             ),
                             const SizedBox(height: 20),
 

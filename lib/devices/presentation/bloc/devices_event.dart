@@ -22,3 +22,5 @@ class RemoveDeviceRequested extends DevicesEvent {
   final String id;
   RemoveDeviceRequested(this.id);
 }
+
+class RefreshDeviceStatuses extends DevicesEvent {}

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../auth/domain/entities/user_entity.dart';
 
 // Data Injection Imports
-import '../../data/datasources/alerts_mock_data_source.dart';
+import '../../data/datasources/alerts_data_source.dart';
 import '../../data/repositories/alerts_repository_impl.dart';
 import '../../domain/usecases/get_alerts_usecase.dart';
 
@@ -25,9 +27,13 @@ class AlertsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final httpClient = context.read<http.Client>();
     // 1. Dependency Injection
     final alertsRepo = AlertsRepositoryImpl(
-      remoteDataSource: AlertsMockDataSourceImpl(),
+      remoteDataSource: AlertsRemoteDataSourceImpl(
+        client: httpClient,
+        sharedPreferences: context.read<SharedPreferences>(),
+      ),
     );
 
     return BlocProvider(

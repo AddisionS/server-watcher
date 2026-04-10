@@ -34,7 +34,11 @@ class _DeviceHorizontalListState extends State<DeviceHorizontalList> {
         final deviceId = deviceState.selectedDeviceId!;
         context.read<DevicesBloc>().add(SelectDevice(deviceId));
         if (widget.isHomePage) {
-          context.read<HomeBloc>().add(HomeDeviceChanged(deviceId));
+          final liveState =
+              deviceState.deviceStatuses[deviceId]?.state ?? 'unknown';
+          if (liveState != 'dead' && liveState != 'unknown') {
+            context.read<HomeBloc>().add(HomeDeviceChanged(deviceId));
+          }
         }
       }
     });
@@ -84,13 +88,21 @@ class _DeviceHorizontalListState extends State<DeviceHorizontalList> {
                     final device = state.devices[index];
                     final isSelected = device.id == state.selectedDeviceId;
 
+                    final statusInfo = state.deviceStatuses[device.id];
+                    final liveState = statusInfo?.state ?? 'unknown';
+                    final alertActive = statusInfo?.alertActive ?? false;
+
                     Color statusColor;
-                    if (device.status == 'online') {
-                      statusColor = Colors.green;
-                    } else if (device.status == 'offline') {
+                    String statusLabel;
+                    if (alertActive) {
                       statusColor = Colors.red;
+                      statusLabel = 'ALERT';
+                    } else if (liveState == 'alive') {
+                      statusColor = Colors.green;
+                      statusLabel = 'ONLINE';
                     } else {
-                      statusColor = Colors.orange;
+                      statusColor = const Color.fromARGB(255, 133, 133, 133);
+                      statusLabel = liveState == 'dead' ? 'OFFLINE' : 'UNKNOWN';
                     }
 
                     return GestureDetector(
@@ -98,7 +110,9 @@ class _DeviceHorizontalListState extends State<DeviceHorizontalList> {
                         context.read<DevicesBloc>().add(
                           SelectDevice(device.id),
                         );
-                        if (widget.isHomePage) {
+                        if (widget.isHomePage &&
+                            liveState != 'dead' &&
+                            liveState != 'unknown') {
                           context.read<HomeBloc>().add(
                             HomeDeviceChanged(device.id),
                           );
@@ -136,7 +150,7 @@ class _DeviceHorizontalListState extends State<DeviceHorizontalList> {
                                 Icon(Icons.circle, size: 8, color: statusColor),
                                 const SizedBox(width: 6),
                                 Text(
-                                  device.status.toUpperCase(),
+                                  statusLabel,
                                   style: TextStyle(
                                     color: statusColor,
                                     fontSize: 10,

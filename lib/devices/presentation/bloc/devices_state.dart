@@ -1,4 +1,5 @@
 import '../../domain/entities/device_entity.dart';
+import '../../domain/entities/device_status_info.dart';
 
 abstract class DevicesState {}
 
@@ -6,9 +7,26 @@ class DevicesLoading extends DevicesState {}
 
 class DevicesLoaded extends DevicesState {
   final List<DeviceEntity> devices;
-  final String? selectedDeviceId; // Track which one is highlighted
+  final String? selectedDeviceId;
+  final Map<String, DeviceStatusInfo> deviceStatuses;
 
-  DevicesLoaded({required this.devices, this.selectedDeviceId});
+  DevicesLoaded({
+    required this.devices,
+    this.selectedDeviceId,
+    this.deviceStatuses = const {},
+  });
+
+  DevicesLoaded copyWith({
+    List<DeviceEntity>? devices,
+    String? selectedDeviceId,
+    Map<String, DeviceStatusInfo>? deviceStatuses,
+  }) {
+    return DevicesLoaded(
+      devices: devices ?? this.devices,
+      selectedDeviceId: selectedDeviceId ?? this.selectedDeviceId,
+      deviceStatuses: deviceStatuses ?? this.deviceStatuses,
+    );
+  }
 
   // Helper to find the full object of selected device
   DeviceEntity? get selectedDevice {

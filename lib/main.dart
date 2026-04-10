@@ -12,6 +12,7 @@ import 'auth/domain/usecases/logout_usecase.dart';
 import 'auth/domain/usecases/auth_check_usecase.dart';
 import 'auth/presentation/bloc/auth_bloc.dart';
 import 'auth/presentation/bloc/auth_event.dart';
+import 'auth/presentation/bloc/auth_state.dart';
 
 import 'devices/data/datasources/devices_datasource.dart';
 import 'devices/data/repositories/devices_repository_impl.dart';
@@ -73,7 +74,8 @@ class _MyAppState extends State<MyApp> {
       addDevice: AddDeviceUseCase(_devicesRepo),
       updateDevice: UpdateDeviceUseCase(_devicesRepo),
       removeDevice: RemoveDeviceUseCase(_devicesRepo),
-    )..add(LoadDevices());
+      refreshDeviceStatuses: RefreshDeviceStatusesUseCase(_devicesRepo),
+    ); // LoadDevices is now triggered by AuthBloc listener after login
 
     // Router is created AFTER auth bloc exists so it can reference its state
     _router = createRouter(_authBloc);
@@ -102,12 +104,20 @@ class _MyAppState extends State<MyApp> {
           BlocProvider<AuthBloc>.value(value: _authBloc),
           BlocProvider<DevicesBloc>.value(value: _devicesBloc),
         ],
-        child: MaterialApp.router(
-          debugShowCheckedModeBanner: false,
-          title: 'Server Watcher',
-          themeMode: ThemeMode.dark,
-          darkTheme: AppTheme.darkTheme,
-          routerConfig: _router, // <-- replaces `home:`
+        child: BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthSuccess) {
+              // Only load devices AFTER we have a valid auth token
+              _devicesBloc.add(LoadDevices());
+            }
+          },
+          child: MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: 'Server Watcher',
+            themeMode: ThemeMode.dark,
+            darkTheme: AppTheme.darkTheme,
+            routerConfig: _router,
+          ),
         ),
       ),
     );

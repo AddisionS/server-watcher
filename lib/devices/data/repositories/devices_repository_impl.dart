@@ -1,5 +1,6 @@
 import '../../domain/entities/device_entity.dart';
 import '../../domain/entities/device_file_result.dart';
+import '../../domain/entities/device_status_info.dart';
 import '../../domain/repositories/devices_repository.dart';
 import '../datasources/devices_datasource.dart'; // Use Remote Source
 
@@ -32,4 +33,9 @@ class DevicesRepositoryImpl implements DevicesRepository {
 
   @override
   Future<void> removeDevice(String id) => dataSource.deleteDevice(id);
+
+  @override
+  Future<Map<String, DeviceStatusInfo>> refreshStatuses(
+    List<String> deviceIds,
+  ) => dataSource.getDeviceStatuses(deviceIds);
 }

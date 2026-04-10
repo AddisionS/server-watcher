@@ -4,12 +4,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/device_model.dart';
 import '../models/firmware_response.dart';
 import '../../../app_config.dart';
+import '../../domain/entities/device_status_info.dart';
 
 abstract class DevicesRemoteDataSource {
   Future<List<DeviceModel>> getDevices();
   Future<FirmwareResponse> addDevice(String room); // Returns File Data
   Future<void> updateDevice(String id, String newRoom);
   Future<void> deleteDevice(String id);
+  Future<Map<String, DeviceStatusInfo>> getDeviceStatuses(List<String> deviceIds);
 }
 
 class DevicesRemoteDataSourceImpl implements DevicesRemoteDataSource {
@@ -61,8 +63,8 @@ class DevicesRemoteDataSourceImpl implements DevicesRemoteDataSource {
       final bytes = response.bodyBytes;
 
       // 2. Extract Filename from Header
-      // Header format: 'attachment; filename="ESP-123.ino"'
-      String filename = "firmware.ino"; // Default
+
+      String filename = "firmware.ino";
       final contentDisposition = response.headers['content-disposition'];
 
       if (contentDisposition != null) {
@@ -90,6 +92,59 @@ class DevicesRemoteDataSourceImpl implements DevicesRemoteDataSource {
     if (response.statusCode != 204) {
       throw Exception('Failed to delete device: ${response.statusCode}');
     }
+  }
+
+  @override
+  Future<Map<String, DeviceStatusInfo>> getDeviceStatuses(
+    List<String> deviceIds,
+  ) async {
+    final results = await Future.wait(
+      deviceIds.map((id) async {
+        try {
+          final url = Uri.parse('${AppConfig.baseUrl}/status/$id');
+          final response = await client.get(url, headers: _getHeaders());
+          if (response.statusCode == 200) {
+            final Map<String, dynamic> body = json.decode(response.body);
+            return MapEntry(
+              id,
+              DeviceStatusInfo(
+                state: body['state'] as String? ?? 'unknown',
+                alertActive: body['alert_active'] as bool? ?? false,
+                firmware: body['firmware'] as String? ?? 'unknown',
+              ),
+            );
+          } else if (response.statusCode == 404) {
+            return MapEntry(
+              id,
+              const DeviceStatusInfo(
+                state: 'dead',
+                alertActive: false,
+                firmware: 'unknown',
+              ),
+            );
+          } else {
+            return MapEntry(
+              id,
+              const DeviceStatusInfo(
+                state: 'unknown',
+                alertActive: false,
+                firmware: 'unknown',
+              ),
+            );
+          }
+        } catch (_) {
+          return MapEntry(
+            id,
+            const DeviceStatusInfo(
+              state: 'unknown',
+              alertActive: false,
+              firmware: 'unknown',
+            ),
+          );
+        }
+      }),
+    );
+    return Map.fromEntries(results);
   }
 
   @override

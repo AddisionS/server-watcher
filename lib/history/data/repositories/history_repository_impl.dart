@@ -1,6 +1,6 @@
 import '../../../../home/domain/entities/sensor_data_entity.dart';
 import '../../domain/repositories/history_repository.dart';
-import '../datasources/history_mock_data_source.dart';
+import '../datasources/history_data_source.dart';
 
 class HistoryRepositoryImpl implements HistoryRepository {
   final HistoryRemoteDataSource remoteDataSource;
