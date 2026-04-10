@@ -11,7 +11,7 @@ router = APIRouter(
     tags=["status"],
 )
 
-@router.post("/")
+@router.post("")
 async def receive_status(payload: StatusPayload):
     if not is_device_authorized(
             device_id=payload.device_id,

@@ -216,7 +216,7 @@ void loop() {
     status += "\"firmware\":\"" + String(FIRMWARE_VERSION) + "\",";
     status += "\"uptime_sec\":" + String(now / 1000.0, 2) + ",";
     status += "\"components\":{";
-    status += "\"sensor\":\"" + String(sensor_ok ? "ok" : "dead") + "\",";
+    status += "\"sensor\":\"" + String(sensor_ok ? "ok" : "dead") + "\"";
     status += "}";
 
 
