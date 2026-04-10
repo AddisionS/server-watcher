@@ -94,6 +94,9 @@ class _DeviceHorizontalListState extends State<DeviceHorizontalList> {
 
                     Color statusColor;
                     String statusLabel;
+                    print(statusInfo);
+                    print(liveState);
+                    print(alertActive);
                     if (alertActive) {
                       statusColor = Colors.red;
                       statusLabel = 'ALERT';
