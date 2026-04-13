@@ -95,10 +95,10 @@ def evaluate_device_state():
     for device in cache._devices.values():
         delta = now - device.last_seen
 
-    if delta > DEVICE_THRESHOLD and device.state != "dead":
-        device.state = "dead"
-    elif delta <= DEVICE_THRESHOLD and device.state != "alive":
-        device.state = "alive"
+        if delta > DEVICE_THRESHOLD and device.state != "dead":
+            device.state = "dead"
+        elif delta <= DEVICE_THRESHOLD and device.state != "alive":
+            device.state = "alive"
 
 def liveness_loop():
     while True:

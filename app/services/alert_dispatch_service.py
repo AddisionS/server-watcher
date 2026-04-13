@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from app.services.email_service import send_email
-from app.services.whatsapp_service import send_whatsapp_alert
 from app.core.logger import logger
 
 
@@ -41,16 +40,4 @@ def dispatch_alert(
             exc_info=True,
         )
 
-    try:
-        send_whatsapp_alert(
-            device_id=device_id,
-            location=device_name,
-            temperature=temperature_str,
-            humidity=humidity_str,
-            timestamp=timestamp_str,
-        )
-    except Exception:
-        logger.error(
-            "Failed to send WhatsApp alert",
-            exc_info=True,
-        )
+

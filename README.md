@@ -1,6 +1,6 @@
 # Server Watcher — Backend
 
-> FastAPI backend for **Server Watcher**, an IoT monitoring system that collects temperature and humidity data from ESP-based devices, evaluates alert thresholds, and dispatches notifications via Email and WhatsApp.
+> FastAPI backend for **Server Watcher**, an IoT monitoring system that collects temperature and humidity data from ESP-based devices, evaluates alert thresholds, and dispatches notifications via Email.
 
 ---
 
@@ -15,6 +15,7 @@
 - [Authentication & Roles](#authentication--roles)
 - [Database Schema](#database-schema)
 - [Alert System](#alert-system)
+- [Device State Tracking](#device-state-tracking)
 - [Firmware Generation](#firmware-generation)
 - [Bootstrap Accounts](#bootstrap-accounts)
 - [Configuration](#configuration)
@@ -29,7 +30,8 @@ Server Watcher is designed to monitor physical environments (e.g., server rooms)
 - Receives sensor readings from registered ESP devices
 - Stores time-series metrics in **InfluxDB**
 - Evaluates readings against configurable thresholds
-- Fires **email** and **WhatsApp** alerts when thresholds are breached
+- Fires **email** alerts when thresholds are breached
+- Tracks real-time device liveness and firmware state in memory
 - Provides a REST API consumed by the frontend dashboard
 - Auto-generates pre-configured **Arduino firmware** (`.ino`) for new devices
 
@@ -54,9 +56,12 @@ ESP Device (Arduino/ESP32)
 │  │  contacts)  │               │
 │  └─────────────┘               │
 │                                 │
+│  In-memory Caches:              │
+│    DeviceCache  (liveness)      │
+│    THRESHOLDS                   │
+│    ALERT_EMAILS                 │
+│                                 │
 │  Alert Engine ──► Email (SMTP)  │
-│               └─► WhatsApp      │
-│                   (Gupshup API) │
 └─────────────────────────────────┘
         │
         │  REST API (JWT-protected)
@@ -75,7 +80,6 @@ ESP Device (Arduino/ESP32)
 | Relational DB | SQLite |
 | Auth | JWT (`python-jose`), bcrypt (`passlib`) |
 | Email | SMTP via `smtplib` (STARTTLS) |
-| WhatsApp | Gupshup API |
 | Config | `python-dotenv` |
 | Package manager | `uv` |
 
@@ -88,12 +92,12 @@ server-watcher-backend/
 ├── main.py                          # App entry point, lifespan startup
 ├── requirements.txt
 ├── pyproject.toml
-├── firmware_template.ino            # Arduino template for device provisioning
 └── app/
     ├── api/                         # Route handlers
     │   ├── login.py                 # POST /login
     │   ├── ingest.py                # POST /ingest  (device data)
     │   ├── status.py                # POST /status  (device heartbeat)
+    │   │                            # GET  /status/{device_id}
     │   ├── metrics.py               # GET  /metrics/...
     │   ├── alerts.py                # GET  /alerts/...
     │   ├── devices.py               # CRUD /admin/devices/...
@@ -101,44 +105,47 @@ server-watcher-backend/
     │   ├── admin_thresholds.py      # GET/PUT /admin/thresholds/
     │   ├── admin_alert_contacts.py  # CRUD /admin/alerts/emails|phones
     │   └── dev_logs.py              # GET /dev/logs/
+    ├── cache/
+    │   ├── alert_cache.py           # In-memory sets: ALERT_EMAILS, ALERT_PHONES
+    │   ├── device_status_cache.py   # In-memory DeviceCache + DeviceState
+    │   └── threshold_cache.py       # In-memory THRESHOLDS dict
     ├── core/
     │   ├── config.py                # Env var loading
     │   ├── security.py              # JWT + bcrypt helpers
     │   ├── deps.py                  # require_role() dependency
     │   ├── roles.py                 # Role enum (ADMIN, USER, DEVELOPER)
-    │   ├── alert_cache.py           # In-memory sets: ALERT_EMAILS, ALERT_PHONES
-    │   ├── threshold_cache.py       # In-memory THRESHOLDS dict
     │   └── logger.py                # File + console logger
     ├── db/
     │   ├── sqlite.py                # Connection, init_db(), schema
     │   └── influx.py                # InfluxDB client, write/query helpers
+    ├── firmware/
+    │   └── firmware_template.ino    # Arduino template for device provisioning
     ├── models/                      # Pydantic request/response schemas
     │   ├── auth.py
+    │   ├── contacts.py
     │   ├── device.py
     │   ├── ingest.py
     │   ├── status.py
     │   ├── thresholds.py
     │   └── user.py
-    ├── firmware/                    # (firmware template read path)
     └── services/
         ├── account_bootstrap_service.py   # Seeds default users on startup
-        ├── alert_contact_service.py       # Load/add/remove emails & phones
-        ├── alert_dispatch_service.py      # Orchestrates email + WhatsApp sending
+        ├── alert_contact_service.py       # Load/add/remove alert emails
+        ├── alert_dispatch_service.py      # Dispatches email alerts on threshold breach
         ├── alert_eval_service.py          # Threshold breach evaluation
         ├── alert_read_service.py          # Query alert history from InfluxDB
         ├── device_auth_service.py         # Validates device_id + auth_token
         ├── device_auth_token_service.py   # Generates secure auth tokens
         ├── device_db_service.py           # SQLite CRUD for devices
         ├── device_id_service.py           # Generates esp-<uuid> IDs
-        ├── device_status_service.py       # Device state tracking (stub)
+        ├── device_state_service.py        # Device liveness tracking + cache sync
         ├── email_service.py               # SMTP email dispatch
         ├── firmware_generation_service.py # Template-based .ino generation
         ├── ingest_service.py              # Writes metrics to InfluxDB
         ├── log_read_service.py            # Reads tail of log file
         ├── metric_services.py             # Queries metrics from InfluxDB
         ├── threshold_service.py           # Load/update thresholds
-        ├── user_service.py                # SQLite CRUD for users
-        └── whatsapp_service.py            # Gupshup WhatsApp API dispatch
+        └── user_service.py                # SQLite CRUD for users
 ```
 
 ---
@@ -151,8 +158,9 @@ server-watcher-backend/
 Admin: POST /admin/devices/  { device_name }
   → generate device_id  (esp-<12-char-uuid>)
   → generate auth_token (secrets.token_urlsafe(32))
-  → render firmware_template.ino with credentials injected
+  → render app/firmware/firmware_template.ino with credentials injected
   → save device to SQLite
+  → add device to in-memory DeviceCache
   → return .ino file as download
 ```
 
@@ -168,25 +176,38 @@ ESP Device: POST /ingest
         → write alert to InfluxDB  (measurement: "alerts")
         → dispatch_alert():
             → send_email()     via SMTP to all ALERT_EMAILS
-            → send_whatsapp()  via Gupshup to all ALERT_PHONES
 ```
 
 ### 3. Device Heartbeat
 
 ```
 ESP Device: POST /status
-  { device_id, auth_token, firmware_version, uptime_sec, components }
+  { device_id, auth_token, firmware, uptime_sec, components }
   → validate device credentials
-  (state tracking planned via DeviceStateManager)
+  → update DeviceCache:
+      last_seen, firmware, uptime_sec, sensor_status
+      firmware_update flag set if firmware != FIRMWARE_VERSION
 ```
 
-### 4. Frontend Dashboard Queries
+### 4. Device Liveness Loop
+
+```
+Background thread (started at app startup):
+  every 10 seconds → evaluate_device_state()
+    for each device in DeviceCache:
+      if now - last_seen > DEVICE_THRESHOLD → state = "dead"
+      else                                  → state = "alive"
+```
+
+### 5. Frontend Dashboard Queries
 
 ```
 Authenticated User: GET /metrics/latest/{device_id}
-                    GET /metrics/export/{device_id}?start=&end=   → CSV
-                    GET /alerts/                                   → recent alerts
-                    GET /alerts/device/{device_id}/csv             → CSV export
+                    GET /metrics/24h/{device_id}              → last 24 hours
+                    GET /metrics/export/{device_id}?start=&end=  → CSV
+                    GET /alerts/                               → recent alerts
+                    GET /alerts/device/{device_id}/csv         → CSV export
+                    GET /status/{device_id}                    → live device state
 ```
 
 ---
@@ -228,6 +249,17 @@ Authenticated User: GET /metrics/latest/{device_id}
 }
 ```
 
+**Status payload:**
+```json
+{
+  "device_id": "esp-abc123def456",
+  "auth_token": "...",
+  "firmware": "1.0.0",
+  "uptime_sec": 3600.0,
+  "components": { "sensor": "ok" }
+}
+```
+
 ---
 
 ### Metrics
@@ -235,6 +267,7 @@ Authenticated User: GET /metrics/latest/{device_id}
 | Method | Path | Roles | Description |
 |---|---|---|---|
 | `GET` | `/metrics/latest/{device_id}` | USER, ADMIN, DEVELOPER | Latest reading for a device |
+| `GET` | `/metrics/24h/{device_id}` | USER, ADMIN, DEVELOPER | All readings from the last 24 hours |
 | `GET` | `/metrics/export/{device_id}?start=&end=` | USER, ADMIN, DEVELOPER | CSV export of a time range |
 
 ---
@@ -245,6 +278,27 @@ Authenticated User: GET /metrics/latest/{device_id}
 |---|---|---|---|
 | `GET` | `/alerts/` | USER, ADMIN, DEVELOPER | Recent alerts (up to 1000) |
 | `GET` | `/alerts/device/{device_id}/csv` | USER, ADMIN, DEVELOPER | CSV export of device alerts |
+
+---
+
+### Status
+
+| Method | Path | Roles | Description |
+|---|---|---|---|
+| `GET` | `/status/{device_id}` | USER, ADMIN, DEVELOPER | Live state of a device from in-memory cache |
+
+**Response:**
+```json
+{
+  "state": "alive",
+  "last_seen": 1711700000.0,
+  "uptime_sec": 3600.0,
+  "sensor_status": "ok",
+  "alert_active": false,
+  "firmware": "1.0.0",
+  "firmware_update": false
+}
+```
 
 ---
 
@@ -296,9 +350,6 @@ Authenticated User: GET /metrics/latest/{device_id}
 | `GET` | `/admin/alerts/emails` | USER, ADMIN, DEVELOPER | List alert emails |
 | `POST` | `/admin/alerts/emails?email=` | ADMIN, DEVELOPER | Add alert email |
 | `DELETE` | `/admin/alerts/emails?email=` | ADMIN, DEVELOPER | Remove alert email |
-| `GET` | `/admin/alerts/phones` | USER, ADMIN, DEVELOPER | List alert phone numbers |
-| `POST` | `/admin/alerts/phones?phone=` | ADMIN, DEVELOPER | Add phone (E.164 format) |
-| `DELETE` | `/admin/alerts/phones?phone=` | ADMIN, DEVELOPER | Remove phone number |
 
 ---
 
@@ -318,7 +369,7 @@ There are three roles:
 
 | Role | Capabilities |
 |---|---|
-| `user` | Read metrics, alerts, thresholds, devices, and alert contacts |
+| `user` | Read metrics, alerts, thresholds, devices, alert contacts, and device status |
 | `admin` | Everything `user` can do + create/delete users, devices, contacts, and update thresholds |
 | `developer` | Everything `admin` can do + access raw server logs via `/dev/logs/` |
 
@@ -353,10 +404,10 @@ Passwords are hashed with **bcrypt** (72-byte limit enforced).
 | `humidity_min` | REAL | 40.0 |
 | `humidity_max` | REAL | 70.0 |
 
-**`alert_emails`** / **`alert_phones`**
+**`alert_emails`**
 | Column | Type |
 |---|---|
-| `email` / `phone` | TEXT PK |
+| `email` | TEXT PK |
 | `created_at` | TEXT |
 
 ### InfluxDB (time-series data)
@@ -377,13 +428,33 @@ The alert pipeline is triggered on every ingest:
 
 1. **`alert_eval_service`** checks the in-memory `THRESHOLDS` cache. If temperature or humidity is outside the configured min/max range, a breach is recorded.
 2. The breach is written to the InfluxDB `alerts` measurement for historical querying.
-3. **`alert_dispatch_service`** fans out to two channels concurrently (errors are caught independently so one failure doesn't block the other):
-   - **Email** — sent via SMTP STARTTLS to all addresses in `ALERT_EMAILS`
-   - **WhatsApp** — sent via the [Gupshup](https://www.gupshup.io/) API to all numbers in `ALERT_PHONES`
+3. **`alert_dispatch_service`** sends an **Email** via SMTP STARTTLS to all addresses in `ALERT_EMAILS`.
 
-Both `ALERT_EMAILS` and `ALERT_PHONES` are in-memory sets loaded from SQLite at startup and kept in sync with write-through updates.
+`ALERT_EMAILS` is an in-memory set loaded from SQLite at startup and kept in sync with write-through updates.
 
 The alert notification format includes: Device ID, Device Name, Temperature, Humidity, and Timestamp.
+
+---
+
+## Device State Tracking
+
+Each registered device has a live state entry in the in-memory **`DeviceCache`** (see `app/cache/device_status_cache.py`). State is updated whenever the device posts to `POST /status` and evaluated every 10 seconds by a background thread.
+
+**`DeviceState` fields:**
+
+| Field | Type | Description |
+|---|---|---|
+| `state` | `"alive"` / `"dead"` | Determined by liveness loop |
+| `last_seen` | `float` | Unix timestamp of last `/status` heartbeat |
+| `uptime_sec` | `float` | Device-reported uptime in seconds |
+| `sensor_status` | `"ok"` / `"dead"` | Reported by device via `components.sensor` |
+| `alert_active` | `bool` | Reserved for future use |
+| `firmware` | `str` | Firmware version reported by device |
+| `firmware_update` | `bool` | `true` if reported firmware differs from `FIRMWARE_VERSION` |
+
+**Liveness rule:** a device is marked `"dead"` if `now - last_seen > DEVICE_THRESHOLD` (default: 90 seconds). It transitions back to `"alive"` as soon as a heartbeat arrives within the threshold.
+
+The cache is initialised at startup by `sync_device_cache()`, which seeds one entry per device in SQLite. New devices are added to the cache immediately on `POST /admin/devices/`; deleted devices are removed on `DELETE /admin/devices/{device_id}`.
 
 ---
 
@@ -393,7 +464,7 @@ When a new device is registered via `POST /admin/devices/`, the backend:
 
 1. Generates a unique `device_id` in the format `esp-<12-char-hex>`.
 2. Generates a cryptographically secure `auth_token` using `secrets.token_urlsafe(32)`.
-3. Reads `firmware_template.ino` and replaces the following placeholders:
+3. Reads `app/firmware/firmware_template.ino` and replaces the following placeholders:
 
 | Placeholder | Value |
 |---|---|
@@ -449,15 +520,13 @@ SMTP_USERNAME=your@email.com
 SMTP_PASSWORD=your-smtp-password
 SMTP_FROM=alerts@example.com
 
-# WhatsApp (Gupshup)
-GUPSHUP_API_KEY=your-gupshup-api-key
-GUPSHUP_SOURCE=your-whatsapp-source-number
-GUPSHUP_TEMPLATE_NAME=your-template-name
-
 # Firmware
 SERVER_HOST=your-server-ip-or-domain
 SERVER_PORT=8000
 FIRMWARE_VERSION=1.0.0
+
+# Device liveness (seconds before a device is considered dead)
+DEVICE_THRESHOLD=90
 ```
 
 > The app **will throw a `RuntimeError` at startup** if `JWT_SECRET` is not set.
