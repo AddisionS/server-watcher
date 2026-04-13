@@ -217,7 +217,7 @@ void loop() {
     status += "\"uptime_sec\":" + String(now / 1000.0, 2) + ",";
     status += "\"components\":{";
     status += "\"sensor\":\"" + String(sensor_ok ? "ok" : "dead") + "\"";
-    status += "}";
+    status += "}}";
 
 
     if (link_up) {
