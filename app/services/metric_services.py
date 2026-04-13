@@ -13,6 +13,7 @@ def get_latest_metrics(device_id: str) -> dict | None:
         humidity
     FROM metrics
     WHERE device_id = '{safe_device_id}'
+      AND time >= now() - INTERVAL '2 minutes'
     ORDER BY time DESC
     LIMIT 1
     """
