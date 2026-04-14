@@ -1,9 +1,43 @@
 # Server Watcher
-# Architecture & Flow — Single Page Diagram ✅
+
+---
+
+## Tech-Stack
+| Layer | Technology |
+|---|---|
+| Frontend framework | Flutter |
+| Language | Dart |
+| Architecture | Clean Architecture (Presentation → Domain → Data) |
+| State management | BLoC (`flutter_bloc`) |
+| Routing | `go_router` |
+| HTTP client | `http` |
+| Local storage | `shared_preferences` |
+| Dependency injection | Manual DI in `main.dart` |
+| Authentication | JWT token persistence via `shared_preferences` |
+| Device polling | `Timer.periodic` |
+| Real-time updates | Dart `Stream`, `StreamController`, `StreamSubscription` |
+| Charts / Data visualization | `fl_chart` |
+| Gauge / Sensor UI | Custom Flutter widgets (`sensor_gauge.dart`) |
+| PDF export | `pdf` |
+| File download / save | `file_saver` |
+| Forms & validation | Flutter Forms + `TextEditingController` + validators |
+| Responsive UI | Flutter layout widgets (`Row`, `Column`, `Expanded`, `LayoutBuilder`) |
+| Navigation guard | Route protection via `GoRouter` + `AuthBloc` |
+| Role-based access control | Admin route restrictions inside `GoRouter` |
+| Persistence / Cache | `SharedPreferences` for auth token and cached user |
+| Networking pattern | Repository Pattern + DataSource abstraction |
+| Mock backend support | `*MockDataSourceImpl` classes |
+| Feature modules | Auth, Home, Alerts, History, Config, Devices, Users, Export |
+| Platform targets | Android, iOS, Web, Windows, macOS, Linux |
+| Package manager | `pub` |
+| Build system | Flutter SDK + Dart toolchain |
+
+---
+
+## Architecture & Flow — Single Page Diagram ✅
 
 This single-page diagram summarizes the app flow and shows primary file references for each logical box (Auth, Sensor Stream, Alerts, History, Config, Devices, Export).
 
-> Note: Many data sources are mock implementations (`*MockDataSourceImpl`) — replace them with real remote datasources when integrating a backend. 🔧
 
 ---
 
