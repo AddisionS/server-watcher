@@ -11,7 +11,9 @@ abstract class DevicesRemoteDataSource {
   Future<FirmwareResponse> addDevice(String room); // Returns File Data
   Future<void> updateDevice(String id, String newRoom);
   Future<void> deleteDevice(String id);
-  Future<Map<String, DeviceStatusInfo>> getDeviceStatuses(List<String> deviceIds);
+  Future<Map<String, DeviceStatusInfo>> getDeviceStatuses(
+    List<String> deviceIds,
+  );
 }
 
 class DevicesRemoteDataSourceImpl implements DevicesRemoteDataSource {
@@ -105,7 +107,6 @@ class DevicesRemoteDataSourceImpl implements DevicesRemoteDataSource {
           final response = await client.get(url, headers: _getHeaders());
           if (response.statusCode == 200) {
             final Map<String, dynamic> body = json.decode(response.body);
-            print(body['state']);
             return MapEntry(
               id,
               DeviceStatusInfo(
