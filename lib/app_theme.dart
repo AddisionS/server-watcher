@@ -9,12 +9,13 @@ class AppTheme {
   static const Color textPrimary = Colors.white;
   static const Color textSecondary = Color.fromARGB(241, 255, 255, 255);
 
-  static const Color accentNeonGreen = Color(0xFF2ECA8B);
+  static const Color accentNeonGreen = Color.fromRGBO(51, 242, 149, 1);
   static const Color accentNeonRed = Color(0xFFFF5252);
   // Seen in the strength meter of reference
-  static const Color accentNeonPurple = Color(0xFF9D65FF);
-  static const Color interactiveBlue = Color(0xFF3B82F6);
-
+  //static const Color accentNeonPurple = Color(0xFF9D65FF);
+  static const Color accentNeonPurple = Color.fromRGBO(149, 51, 242, 1);
+  static const Color interactiveBlue = Color.fromRGBO(51, 144, 242, 1);
+  static const Color accentorange = Color.fromRGBO(242, 149, 51, 1);
   static ThemeData get darkTheme {
     // Base text theme using Google Fonts (Inter is a great match for the reference)
     final baseTextTheme = ThemeData.dark().textTheme.apply(fontFamily: 'Inter');

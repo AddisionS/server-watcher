@@ -114,8 +114,9 @@ class _AlertsContent extends StatelessWidget {
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final alert = state.alerts[index];
+                    final ts = alert.timestamp;
                     final timeString =
-                        "${alert.timestamp.year}-${alert.timestamp.month}-${alert.timestamp.day} ${alert.timestamp.hour.toString().padLeft(2, '0')}:${alert.timestamp.minute.toString().padLeft(2, '0')}";
+                        "${ts.year}-${ts.month.toString().padLeft(2, '0')}-${ts.day.toString().padLeft(2, '0')} ${ts.hour.toString().padLeft(2, '0')}:${ts.minute.toString().padLeft(2, '0')} ";
 
                     return Card(
                       color: Colors.red.withValues(alpha: 0.1),

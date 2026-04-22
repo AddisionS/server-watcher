@@ -15,7 +15,9 @@ class AlertModel extends AlertEntity {
 
   factory AlertModel.fromJson(Map<String, dynamic> json) {
     final utcTime = DateTime.parse(json['time']).toUtc();
-    final istTime = utcTime.add(const Duration(hours: 5, minutes: 30));
+    final istTime = DateTime.fromMillisecondsSinceEpoch(
+      utcTime.add(const Duration(hours: 5, minutes: 30)).millisecondsSinceEpoch,
+    );
 
     final temp = (json['temperature'] as num).toDouble();
     final hum = (json['humidity'] as num).toDouble();

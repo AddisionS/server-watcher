@@ -32,7 +32,16 @@ class MainLayout extends StatelessWidget {
               appBar: AppBar(
                 title: Text(title),
                 automaticallyImplyLeading: false, // No Hamburger icon
-                // Background color is automatically handled by AppTheme
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: Image.asset(
+                      'assets/images/logoSdc.png',
+                      height: 75,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
               ),
               body: body,
             ),

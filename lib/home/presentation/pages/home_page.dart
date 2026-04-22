@@ -69,11 +69,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
 
-    _exportRepo = ExportRepositoryImpl(
-      ExportDataSourceImpl(
-        httpClient,
-      ),
-    );
+    _exportRepo = ExportRepositoryImpl(ExportDataSourceImpl(httpClient, sharedPrefs));
   }
 
   @override
@@ -126,7 +122,11 @@ class HomeContent extends StatelessWidget {
         if (state is HomeLoading) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (state is HomeError) return Center(child: Text(state.message));
+        if (state is HomeError) {
+          return Center(
+            child: Text('Please logout and retry.\nError: ${state.message}'),
+          );
+        }
 
         if (state is HomeLoaded) {
           final double latestTemp = state.sensorData.isNotEmpty
@@ -233,12 +233,12 @@ class HomeContent extends StatelessWidget {
 
                 const SizedBox(height: 30),
                 ExportSection(
-                  currentRoom: (context.read<DevicesBloc>().state
-                          is DevicesLoaded)
+                  currentRoom:
+                      (context.read<DevicesBloc>().state is DevicesLoaded)
                       ? (context.read<DevicesBloc>().state as DevicesLoaded)
-                              .selectedDevice
-                              ?.roomName ??
-                          ""
+                                .selectedDevice
+                                ?.roomName ??
+                            ""
                       : "",
                 ),
                 const SizedBox(height: 40),

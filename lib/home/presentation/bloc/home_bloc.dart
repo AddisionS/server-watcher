@@ -18,20 +18,26 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }) : super(HomeLoading()) {
     // 1. Initial Load
     on<HomeInitialLoad>((event, emit) async {
-      try {
-        final thresholds = await getThresholdsUseCase.call();
-        // Emit loaded with empty ID.
-        // The UI (BlocListener in HomePage) will trigger the first device selection.
-        emit(
-          HomeLoaded(
-            selectedDeviceId: "",
-            sensorData: [],
-            thresholds: thresholds,
-          ),
-        );
-      } catch (e) {
-        emit(HomeError("Failed to load thresholds"));
+      // Retry up to 3 times with a short delay to handle auth token race conditions
+      // or transient server unavailability at startup.
+      for (int attempt = 1; attempt <= 3; attempt++) {
+        try {
+          final thresholds = await getThresholdsUseCase.call();
+          emit(
+            HomeLoaded(
+              selectedDeviceId: "",
+              sensorData: [],
+              thresholds: thresholds,
+            ),
+          );
+          return;
+        } catch (e) {
+          if (attempt < 3) {
+            await Future.delayed(const Duration(seconds: 2));
+          }
+        }
       }
+      emit(HomeError("Failed to load thresholds"));
     });
 
     // 2. Device Changed (UPDATED)
